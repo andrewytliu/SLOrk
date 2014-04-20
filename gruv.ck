@@ -5,23 +5,24 @@
 
 250::ms => dur period;
 60 => int base_note;
+0 => int movement;
 
-SqrOsc s => ADSR a => LPF lpf => dac;
+SqrOsc s => ADSR a => LPF lpf => JCRev rev => dac;
 a.set(50::ms, 10::ms, 0.3, 150::ms);
 Std.mtof(base_note + 30) => lpf.freq;
 
 [0, 1, 2, 4] @=> int patch[];
 
-fun void getKeyboard() {
+fun void getKeyboard(int scale[]) {
     KBHit kb;
-    
+
     <<<"[Q] [W] =>", " Speed [UP] [DOWN]">>>;
     <<<"[A] [S] =>", " Tone  [UP] [DOWN]">>>;
     <<<"[Z] [X] =>", " Vol   [UP] [DOWN]">>>;
-    
+
     while (true) {
         kb => now;
-        
+
         while (kb.more()) {
             kb.getchar() => int c;
             if (c == 113) { // Q
@@ -31,10 +32,12 @@ fun void getKeyboard() {
                 10::ms +=> period;
                 <<<"Period: ", period, "ms">>>;
             } else if (c == 97)  { // A
-                1 +=> base_note;
+                scale[movement] +=> base_note;
+                (movement + 1) % scale.cap() => movement;
                 <<<"Note:", base_note >>>;
             } else if (c == 115) { // S
-                1 -=> base_note;
+                scale[movement] -=> base_note;
+                (movement + scale.cap() - 1) % scale.cap() => movement;
                 <<<"Note:", base_note >>>;
             } else if (c == 122) { // Z
                 s.gain() + 0.05 => s.gain;
@@ -50,7 +53,7 @@ fun void getKeyboard() {
 fun void evolvePatch(int scale[]) {
     Math.random2(0, patch.cap()-1) => int which;
     int r;
-    
+
     while (true) {
         Math.random2(0, scale.cap()-1) => r;
         if (r == patch[which]) continue;
@@ -75,5 +78,5 @@ fun void playScale(int scale[]) {
     }
 }
 
-spork ~ getKeyboard();
+spork ~ getKeyboard(minor);
 playScale(minor);
