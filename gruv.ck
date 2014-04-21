@@ -7,9 +7,9 @@
 60 => int base_note;
 0 => int movement;
 
-SqrOsc s => ADSR a => LPF lpf => JCRev rev => dac;
-a.set(50::ms, 10::ms, 0.3, 150::ms);
-Std.mtof(base_note + 30) => lpf.freq;
+TriOsc s => ADSR a => JCRev rev => dac;
+a.set(100::ms, 10::ms, 0.3, 20::ms);
+//Std.mtof(base_note + 30) => lpf.freq;
 
 [0, 1, 2, 4] @=> int patch[];
 
