@@ -3,22 +3,26 @@
 [0, 2, 4, 6, 8, 10] @=> int full[];
 [0, 2, 4, 7, 9] @=> int penta[];
 
-250::ms => dur period;
-60 => int base_note;
-0 => int movement;
-
 TriOsc s => ADSR a => JCRev rev => dac;
 a.set(100::ms, 10::ms, 0.3, 20::ms);
 //Std.mtof(base_note + 30) => lpf.freq;
 
+250::ms => dur period;
+0 => int movement;
+0.2 => s.gain;
+60 => int base_note;
+
+[[1.0,1.0,1.0,1.0], [1.5,0.5,1.5,0.5],
+ [0.5,1.5,0.5,1.5], [0.5,0.5,0.5,2.5]] @=> float pattern[][];
 [0, 1, 2, 4] @=> int patch[];
 
 fun void getKeyboard(int scale[]) {
     KBHit kb;
 
     <<<"[Q] [W] =>", " Speed [UP] [DOWN]">>>;
-    <<<"[A] [S] =>", " Tone  [UP] [DOWN]">>>;
+    <<<"[A] [S] =>", " Base  [UP] [DOWN]">>>;
     <<<"[Z] [X] =>", " Vol   [UP] [DOWN]">>>;
+    <<<"[D] [F] =>", " Oct   [UP] [DOWN]">>>;
 
     while (true) {
         kb => now;
@@ -45,6 +49,12 @@ fun void getKeyboard(int scale[]) {
             } else if (c == 120) { // X
                 s.gain() - 0.05 => s.gain;
                 <<<"Vol:", s.gain() >>>;
+            } else if (c == 100)  { // D
+                12 +=> base_note;
+                <<<"Note:", base_note >>>;
+            } else if (c == 102) { // F
+                12 -=> base_note;
+                <<<"Note:", base_note >>>;
             }
         }
     }
@@ -70,7 +80,7 @@ fun void playScale(int scale[]) {
             for (int i; i < 4; i++) {
                 scale[patch[i]] + base_note => Std.mtof => s.freq;
                 a.keyOn();
-                period => now;
+                period * pattern[0][i] => now;
             }
         }
         //Math.random2(0, major.cap()-1) => patch[Math.random2(0, patch.cap()-1)];
@@ -78,5 +88,5 @@ fun void playScale(int scale[]) {
     }
 }
 
-spork ~ getKeyboard(minor);
-playScale(minor);
+spork ~ getKeyboard(major);
+playScale(major);
