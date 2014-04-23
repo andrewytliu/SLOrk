@@ -33,7 +33,7 @@ e4.set( 10::ms, 8::ms, .5, 500::ms );
 .00 => float vol;
 1 => int tenuto;
 0 => int note_random;
-// note random? 
+// note random?
 for (int i; i< 4;i++)
 {
     notes[i] => Std.mtof => sins[i].freq;
@@ -43,67 +43,82 @@ for (int i; i< 4;i++)
 }
 
 
+fun void print() {
+    if (note_random == 1) {
+        <<<"\033[4ARandom:  ON", "">>>;
+    } else {
+        <<<"\033[4ARandom:  OFF", "">>>;
+    }
+    <<<"Rhythm: ", period_mode>>>;
+    if (tenuto == 1) {
+        <<<"Tenuto:  ON", "">>>;
+    } else {
+        <<<"Tenuto:  OFF", "">>>;
+    }
+    <<<"Vol:    ", vol >>>;
+}
+
 fun void getKeyboard() {
     KBHit kb;
-    <<<"[1] [2] =>", " note random [on] [off]">>>;
-    <<<"[Q] [W] =>", " rhythm mode [UP] [DOWN]">>>;
-    <<<"[A] [S] =>", " Tenuto  [UP] [DOWN]">>>;
-    <<<"[Z] [X] =>", " Vol   [UP] [DOWN]">>>;
-    
+    <<<"[1] [2] =>", " Random [ON] [OFF]">>>;
+    <<<"[Q] [W] =>", " Rhythm [UP] [DOWN]">>>;
+    <<<"[A] [S] =>", " Tenuto [UP] [DOWN]">>>;
+    <<<"[Z] [X] =>", " Vol    [UP] [DOWN]">>>;
+
+    <<<"", "">>>;
+    <<<"", "">>>;
+    <<<"", "">>>;
+    <<<"", "">>>;
+    <<<"", "">>>;
+    print();
+
     while (true) {
         kb => now;
-        
+
         while (kb.more()) {
-            
+
             kb.getchar() => int c;
            // <<<"c", c>>>;//
             if (c == 49) {
                 1 =>  note_random;
-                <<<"Note Random on">>>;
             }else if (c == 50 ) {
                 0 =>  note_random;
-                <<<"Note Random off">>>;
             }
-            
+
             else if (c == 113) { // Q
                 if ( period_mode+ 1< 3)
 					1 +=> period_mode;
-                <<<"Period: ", period_mode>>>;
             } else if (c == 119) { // W
                 if (period_mode -1 >=0)
 					1 -=> period_mode;
-                <<<"Period: ", period_mode>>>;
             } else if (c == 97)  { // A
                 1 => tenuto;
-                <<<"Tenuto On " >>>;
             } else if (c == 115) { // S
                 0 => tenuto;
-                <<<"Tenuto Off " >>>;
             } else if (c == 122) { // Z
                 vol + 0.05 => vol;
-                <<<"Vol:", vol >>>;
             } else if (c == 120) { // X
                 vol - 0.05 => vol;
-                <<<"Vol:", vol >>>;
             }
         }
+        print();
     }
 }
 
     /*
-    
+
     e1.keyOn();
-    
+
     2::second => now;
     e2.keyOn();
-    
-    
+
+
     2::second => now;
     e3.keyOn();
-    
+
     2::second => now;
     e4.keyOn();
-    
+
     2::second => now;
     */
 fun void bass (){
@@ -113,43 +128,43 @@ fun void bass (){
         i => int chaS_index;
         //cur_note + Math.random2(-1,1)*2  => cur_note;
         //cur_note => notes[chaS_index];
-        
+
         notes[chaS_index] => Std.mtof => sins[chaS_index].freq;
         gains[chaS_index]*vol => sins[chaS_index].gain;
-        
+
         adsrs[i].keyOn();
         period[period_mode][i]::second => now;
         if(tenuto==0)
             adsrs[i].keyOff();
-        
+
     }
-    
-   
+
+
     while(1){
         for (int i;i<4;i++){
             //Math.random2(1,3) => int chaS_index;
-            
+
             i => int chaS_index;
             int cur_note;
-            if (note_random ==0) 
+            if (note_random ==0)
                 notes[chaS_index] => cur_note;
-            
-            else     
+
+            else
                 notes[chaS_index] + Math.random2(-1,1)*2  => cur_note;
             //cur_note => notes[chaS_index];
-            
+
             cur_note => Std.mtof => sins[chaS_index].freq;
             gains[chaS_index]*vol => sins[chaS_index].gain;
 
             adsrs[i].keyOn();
-           
+
             period[period_mode][i]::second => now;
             if(tenuto==0)
                 adsrs[i].keyOff();
-            
+
         }
-        
-   
+
+
     }
 }
 
