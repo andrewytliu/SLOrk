@@ -16,6 +16,12 @@ a.set(100::ms, 10::ms, 0.3, 20::ms);
  [0.5,1.5,0.5,1.5], [0.5,0.5,0.5,2.5]] @=> float pattern[][];
 [0, 1, 2, 4] @=> int patch[];
 
+fun void print() {
+    <<<"\033[3APeriod: ", period >>>;
+    <<<"Note:   ", base_note >>>;
+    <<<"Vol:    ", s.gain()>>>;
+}
+
 fun void getKeyboard(int scale[]) {
     KBHit kb;
 
@@ -23,6 +29,11 @@ fun void getKeyboard(int scale[]) {
     <<<"[A] [S] =>", " Base  [UP] [DOWN]">>>;
     <<<"[Z] [X] =>", " Vol   [UP] [DOWN]">>>;
     <<<"[D] [F] =>", " Oct   [UP] [DOWN]">>>;
+    <<<"", "">>>;
+    <<<"", "">>>;
+    <<<"", "">>>;
+    <<<"", "">>>;
+    print();
 
     while (true) {
         kb => now;
@@ -31,31 +42,24 @@ fun void getKeyboard(int scale[]) {
             kb.getchar() => int c;
             if (c == 113) { // Q
                 10::ms -=> period;
-                <<<"Period: ", period, "ms">>>;
             } else if (c == 119) { // W
                 10::ms +=> period;
-                <<<"Period: ", period, "ms">>>;
             } else if (c == 97)  { // A
                 scale[movement] +=> base_note;
                 (movement + 1) % scale.cap() => movement;
-                <<<"Note:", base_note >>>;
             } else if (c == 115) { // S
                 scale[movement] -=> base_note;
                 (movement + scale.cap() - 1) % scale.cap() => movement;
-                <<<"Note:", base_note >>>;
             } else if (c == 122) { // Z
                 s.gain() + 0.05 => s.gain;
-                <<<"Vol:", s.gain() >>>;
             } else if (c == 120) { // X
                 s.gain() - 0.05 => s.gain;
-                <<<"Vol:", s.gain() >>>;
             } else if (c == 100)  { // D
                 12 +=> base_note;
-                <<<"Note:", base_note >>>;
             } else if (c == 102) { // F
                 12 -=> base_note;
-                <<<"Note:", base_note >>>;
             }
+            print();
         }
     }
 }
