@@ -9,7 +9,7 @@ a.set(100::ms, 10::ms, 0.3, 20::ms);
 
 250::ms => dur period;
 0 => int movement;
-0.2 => s.gain;
+0.0 => s.gain;
 60 => int base_note;
 
 [[1.0,1.0,1.0,1.0], [1.5,0.5,1.5,0.5],
@@ -45,10 +45,19 @@ fun void getKeyboard(int scale[]) {
             } else if (c == 119) { // W
                 10::ms +=> period;
             } else if (c == 97)  { // A
-                scale[movement] +=> base_note;
+                if (movement == scale.cap() - 1) {
+                    12 - scale[movement] +=> base_note;
+                } else {
+                    scale[movement + 1] - scale[movement] +=> base_note;
+                }
+                //scale[movement] +=> base_note;
                 (movement + 1) % scale.cap() => movement;
             } else if (c == 115) { // S
-                scale[movement] -=> base_note;
+                if (movement > 0) {
+                    scale[movement] - scale[movement - 1] -=> base_note;
+                } else {
+                    12 - scale[scale.cap() - 1] -=> base_note;
+                }
                 (movement + scale.cap() - 1) % scale.cap() => movement;
             } else if (c == 122) { // Z
                 s.gain() + 0.05 => s.gain;
