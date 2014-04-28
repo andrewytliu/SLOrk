@@ -4,20 +4,22 @@
 [0, 2, 4, 7, 9] @=> int penta[];
 
 TriOsc s => ADSR a => JCRev rev => dac;
-a.set(100::ms, 10::ms, 0.3, 20::ms);
+a.set(40::ms, 10::ms, 0.2, 20::ms);
 //Std.mtof(base_note + 30) => lpf.freq;
 
 250::ms => dur period;
 0 => int movement;
 0.0 => s.gain;
 60 => int base_note;
+0.005 => rev.mix;
 
 [[1.0,1.0,1.0,1.0], [1.5,0.5,1.5,0.5],
  [0.5,1.5,0.5,1.5], [0.5,0.5,0.5,2.5]] @=> float pattern[][];
 [0, 1, 2, 4] @=> int patch[];
 
 fun void print() {
-    <<<"\033[3APeriod: ", period >>>;
+    <<<"\033[4APeriod: ", period >>>;
+    <<<"Attack: ", a.attackTime() >>>;
     <<<"Note:   ", base_note >>>;
     <<<"Vol:    ", s.gain()>>>;
 }
@@ -26,9 +28,11 @@ fun void getKeyboard(int scale[]) {
     KBHit kb;
 
     <<<"[Q] [W] =>", " Speed [UP] [DOWN]">>>;
+    <<<"[E] [R] =>", " Atk   [UP] [DOWN]">>>;
     <<<"[A] [S] =>", " Base  [UP] [DOWN]">>>;
     <<<"[Z] [X] =>", " Vol   [UP] [DOWN]">>>;
     <<<"[D] [F] =>", " Oct   [UP] [DOWN]">>>;
+    <<<"", "">>>;
     <<<"", "">>>;
     <<<"", "">>>;
     <<<"", "">>>;
@@ -60,13 +64,17 @@ fun void getKeyboard(int scale[]) {
                 }
                 (movement + scale.cap() - 1) % scale.cap() => movement;
             } else if (c == 122) { // Z
-                s.gain() + 0.05 => s.gain;
+                s.gain() + 0.0005 => s.gain;
             } else if (c == 120) { // X
-                s.gain() - 0.05 => s.gain;
+                s.gain() - 0.0005 => s.gain;
             } else if (c == 100)  { // D
                 12 +=> base_note;
             } else if (c == 102) { // F
                 12 -=> base_note;
+            } else if (c == 101) { // E
+                a.attackTime() + 1::ms => a.attackTime;
+            } else if (c == 114) { // R
+                a.attackTime() - 1::ms => a.attackTime;
             }
             print();
         }
