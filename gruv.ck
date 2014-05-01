@@ -17,11 +17,21 @@ a.set(40::ms, 10::ms, 0.2, 20::ms);
  [0.5,1.5,0.5,1.5], [0.5,0.5,0.5,2.5]] @=> float pattern[][];
 [0, 1, 2, 4] @=> int patch[];
 
+1::second => dur sec;
+
 fun void print() {
-    <<<"\033[4APeriod: ", period >>>;
+    <<<"\033[5ANow:    ", now / sec >>>;
+    <<<"Period: ", period >>>;
     <<<"Attack: ", a.attackTime() >>>;
     <<<"Note:   ", base_note >>>;
     <<<"Vol:    ", s.gain()>>>;
+}
+
+fun void printLoop() {
+    while (true) {
+        print();
+        100::ms => now;
+    }
 }
 
 fun void getKeyboard(int scale[]) {
@@ -37,7 +47,7 @@ fun void getKeyboard(int scale[]) {
     <<<"", "">>>;
     <<<"", "">>>;
     <<<"", "">>>;
-    print();
+    <<<"", "">>>;
 
     while (true) {
         kb => now;
@@ -110,4 +120,5 @@ fun void playScale(int scale[]) {
 }
 
 spork ~ getKeyboard(major);
+spork ~ printLoop();
 playScale(major);

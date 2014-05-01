@@ -42,12 +42,14 @@ for (int i; i< 4;i++)
 
 }
 
+1::second => dur sec;
 
 fun void print() {
+    <<<"\033[5ANow:    ", now / sec >>>;
     if (note_random == 1) {
-        <<<"\033[4ARandom:  ON", "">>>;
+        <<<"Random:  ON", "">>>;
     } else {
-        <<<"\033[4ARandom:  OFF", "">>>;
+        <<<"Random:  OFF", "">>>;
     }
     <<<"Rhythm: ", period_mode>>>;
     if (tenuto == 1) {
@@ -58,6 +60,13 @@ fun void print() {
     <<<"Vol:    ", vol >>>;
 }
 
+fun void printLoop() {
+    while (true) {
+        print();
+        100::ms => now;
+    }
+}
+
 fun void getKeyboard() {
     KBHit kb;
     <<<"[1] [2] =>", " Random [ON] [OFF]">>>;
@@ -65,6 +74,7 @@ fun void getKeyboard() {
     <<<"[A] [S] =>", " Tenuto [UP] [DOWN]">>>;
     <<<"[Z] [X] =>", " Vol    [UP] [DOWN]">>>;
 
+    <<<"", "">>>;
     <<<"", "">>>;
     <<<"", "">>>;
     <<<"", "">>>;
@@ -169,5 +179,6 @@ fun void bass (){
 }
 
 spork ~ getKeyboard();
+spork ~ printLoop();
 spork ~ bass();
 while(true) 1::second=>now;
