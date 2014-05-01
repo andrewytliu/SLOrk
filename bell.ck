@@ -50,9 +50,9 @@ fun void getKeyboard() {
             } else if (c == 115) { // S
                 1 -=> base_note;
             } else if (c == 122) { // Z
-                vol + 0.005 => vol;
+                vol + 0.0001 => vol;
             } else if (c == 120) { // X
-                vol - 0.005 => vol;
+                vol - 0.0001 => vol;
             }
         }
         print();
