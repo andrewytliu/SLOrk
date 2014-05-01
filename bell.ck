@@ -6,11 +6,21 @@
 
 0 => int staccato;
 
+1::second => dur sec;
+
 fun void print() {
-    <<<"\033[4AStaccato:  ", staccato >>>;
+    <<<"\033[5ANow:       ", now / sec >>>;
+    <<<"Staccato:  ", staccato >>>;
     <<<"Period:    ", period >>>;
     <<<"Tone:      ", base_note >>>;
     <<<"Vol:       ", vol >>>;
+}
+
+fun void printLoop() {
+    while (true) {
+        print();
+        100::ms => now;
+    }
 }
 
 fun void getKeyboard() {
@@ -21,6 +31,7 @@ fun void getKeyboard() {
     <<<"[A] [S] =>", " Tone     [UP] [DOWN]">>>;
     <<<"[Z] [X] =>", " Vol      [UP] [DOWN]">>>;
 
+    <<<"", "">>>;
     <<<"", "">>>;
     <<<"", "">>>;
     <<<"", "">>>;
@@ -87,6 +98,7 @@ fun void bell (float p )
 }
 }
 spork ~ getKeyboard();
+spork ~ printLoop();
 spork ~ bell(1.0);
 //1.5 ::second => now;
 //spork ~ bell(0.5);
