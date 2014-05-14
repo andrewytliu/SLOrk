@@ -7,7 +7,7 @@ SinOsc s4;
 1 => int base;
 [48,55,62,69]@=>int notes[];
 [.8,.6,.4,0.2] @=> float gains[];
-[ [1.0,1.0,1.0,1.0],[1.0,1.0,1.5,.5],[.75,.25,.75,.25] ]@=> float period[][];
+[ [1.0,1.0,1.0,1.0],[1.0,1.0,1.5,.5],[.75,.25,.75,.25],[.6,.2,.6,.2],[.3,.1,.3,.1]]@=> float period[][];
 [1,0] @=> int tenutos[];
 
 
@@ -33,6 +33,7 @@ e4.set( 10::ms, 8::ms, .5, 500::ms );
 .00 => float vol;
 1 => int tenuto;
 0 => int note_random;
+0 => int base_note_change; 
 // note random?
 for (int i; i< 4;i++)
 {
@@ -45,7 +46,7 @@ for (int i; i< 4;i++)
 1::second => dur sec;
 
 fun void print() {
-    <<<"\033[5ANow:    ", now / sec >>>;
+    <<<"\033[6ANow:    ", now / sec >>>;
     if (note_random == 1) {
         <<<"Random:  ON", "">>>;
     } else {
@@ -58,6 +59,7 @@ fun void print() {
         <<<"Tenuto:  OFF", "">>>;
     }
     <<<"Vol:    ", vol >>>;
+    <<<"base change", base_note_change>>>;
 }
 
 fun void printLoop() {
@@ -70,6 +72,7 @@ fun void printLoop() {
 fun void getKeyboard() {
     KBHit kb;
     <<<"[1] [2] =>", " Random [ON] [OFF]">>>;
+    <<<"[3] [4] =>", " base   [Down][Up]">>>;
     <<<"[Q] [W] =>", " Rhythm [UP] [DOWN]">>>;
     <<<"[A] [S] =>", " Tenuto [UP] [DOWN]">>>;
     <<<"[Z] [X] =>", " Vol    [UP] [DOWN]">>>;
@@ -88,7 +91,6 @@ fun void getKeyboard() {
         while (kb.more()) {
 
             kb.getchar() => int c;
-           // <<<"c", c>>>;//
             if (c == 49) {
                 1 =>  note_random;
             }else if (c == 50 ) {
@@ -96,7 +98,7 @@ fun void getKeyboard() {
             }
 
             else if (c == 113) { // Q
-                if ( period_mode+ 1< 3)
+                if ( period_mode+ 1< 5)
 					1 +=> period_mode;
             } else if (c == 119) { // W
                 if (period_mode -1 >=0)
@@ -106,10 +108,17 @@ fun void getKeyboard() {
             } else if (c == 115) { // S
                 0 => tenuto;
             } else if (c == 122) { // Z
-                vol + 0.05 => vol;
+                vol + 0.001 => vol;
             } else if (c == 120) { // X
-                vol - 0.05 => vol;
+                vol - 0.001 => vol;
             }
+            else if (c==51){
+                1 -=> base_note_change;
+            }else if (c==52) {
+                1 +=> base_note_change;
+            }
+            
+            
         }
         print();
     }
@@ -156,8 +165,12 @@ fun void bass (){
 
             i => int chaS_index;
             int cur_note;
-            if (note_random ==0)
-                notes[chaS_index] => cur_note;
+            if (note_random ==0){
+                if (i==0)
+                     notes[chaS_index] + base_note_change=> cur_note;
+                else
+                    notes[chaS_index] => cur_note;
+            }
 
             else
                 notes[chaS_index] + Math.random2(-1,1)*2  => cur_note;
