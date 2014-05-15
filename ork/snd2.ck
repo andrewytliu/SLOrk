@@ -36,8 +36,8 @@ fun void setTone(int base) {
     env.keyOn();
 }
 
-[[0, 4, 7], 
-[0, 4, 9], 
+[[0, 4, 7],
+[0, 4, 9],
 [0, 5, 9],
 [2, 7]] @=> int chords[][];
 
@@ -56,13 +56,13 @@ fun void stop() {
 fun void getKeyboard() {
     Hid hi;
     HidMsg msg;
-    
+
     0 => int device;
     if (!hi.openKeyboard(device)) me.exit();
-    
+
     while (true) {
         hi => now;
-        
+
         while (hi.recv(msg)) {
             if (msg.ascii == 32) { // space
                 if (msg.isButtonDown()) {
@@ -85,7 +85,68 @@ fun void runBar() {
     }
 }
 
+0 => int network;
+
+fun void recvOrk() {
+    OscRecv recv;
+    6449 => recv.port;
+    recv.listen();
+    recv.event("beat", "i") @=> OscEvent oe;
+
+    while (true) {
+        oe => now;
+        if (network == 0) {
+            1 => network;
+        }
+
+        while (oe.nextMsg() != 0) {
+            oe.getInt() => currentBar;
+        }
+    }
+}
+
+<<<"", "">>>;
+<<<"", "">>>;
+
+fun void print() {
+    if (network == 0) {
+        <<<"\033[2ANetwork: OFF", "">>>;
+    } else {
+        <<<"\033[2ANetwork: ON", "">>>;
+    }
+    <<<"[", currentBar ,"]">>>;
+}
+
+fun void printLoop() {
+    while (true) {
+        print();
+        100::ms => now;
+    }
+}
+
+fun void reportSelf(string hostname, string newclient) {
+    OscSend xmit;
+    xmit.setHost(hostname, 5501);
+
+    while (network == 0) {
+        xmit.startMsg("report", "s");
+        newclient => xmit.addString;
+        5::second => now;
+    }
+}
+
+
+string myself;
+if (me.args() > 1) {
+    me.arg(1) => myself;
+} else {
+    Std.getenv("NET_NAME") => myself;
+}
+
+spork ~ reportSelf(me.arg(0), myself);
 spork ~ getKeyboard();
-spork ~ runBar();
+spork ~ printLoop();
+// spork ~ runBar();
+spork ~ recvOrk();
 while (true) { 1::second => now; }
 

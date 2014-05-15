@@ -1,15 +1,10 @@
-// host name and port
-["localhost"] @=> string hostnames[];
+
+20 => int maxClient;
+0 => int clients;
+
+string hostnames[maxClient];
+OscSend xmit[maxClient];
 6449 => int port;
-hostnames.cap() => int clients;
-
-// send object
-OscSend xmit[clients];
-
-// aim the transmitter
-for (int i; i < clients; ++i) {
-    xmit[i].setHost(hostnames[i], port);
-}
 
 2::second => dur beat;
 4 => int beatPerBar;
@@ -28,5 +23,31 @@ fun void loop() {
     }
 }
 
+fun void setupClient(string name) {
+    name => hostnames[clients];
+    xmit[clients].setHost(name, port);
+    clients++;
+}
+
+fun void recvReport()
+{
+    OscRecv recv;
+    5501 => recv.port;
+    recv.listen();
+
+    recv.event("report, s") @=> OscEvent oe;
+
+    while (true) {
+        oe => now;
+
+        while( oe.nextMsg() != 0 ) {
+            oe.getString()  => string client;
+            <<<"Reporting:", client>>>;
+            setupClient(client);
+        }
+    }
+}
+
 spork ~ loop();
+spork ~ recvReport();
 while(true) { 1::second => now; }

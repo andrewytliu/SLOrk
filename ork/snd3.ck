@@ -126,6 +126,26 @@ fun void printLoop() {
     }
 }
 
+fun void reportSelf(string hostname, string newclient) {
+    OscSend xmit;
+    xmit.setHost(hostname, 5501);
+
+    while (network == 0) {
+        xmit.startMsg("report", "s");
+        newclient => xmit.addString;
+        5::second => now;
+    }
+}
+
+
+string myself;
+if (me.args() > 1) {
+    me.arg(1) => myself;
+} else {
+    Std.getenv("NET_NAME") => myself;
+}
+
+spork ~ reportSelf(me.arg(0), myself);
 spork ~ getKeyboard();
 spork ~ printLoop();
 // spork ~ runBar();
