@@ -26,7 +26,6 @@ d => Gain fbk => d;
 
 fun void setTone(int base) {
     env.keyOff();
-    <<<"Setting: ", base>>>;
     base => Std.mtof => bpf.freq;
 
     base => Std.mtof => osc1.freq;
@@ -109,12 +108,13 @@ fun void recvOrk() {
 <<<"", "">>>;
 
 fun void print() {
+    "\033[5D\033[2A" => string ctrl;
     if (network == 0) {
-        <<<"\033[2ANetwork: OFF", "">>>;
+        <<<ctrl, "Network: OFF", "">>>;
     } else {
-        <<<"\033[2ANetwork: ON", "">>>;
+        <<<ctrl, "Network: ON", "">>>;
     }
-    <<<"[", currentBar ,"]">>>;
+    <<<" [", currentBar ,"]">>>;
 }
 
 fun void printLoop() {
@@ -143,10 +143,12 @@ if (me.args() > 1) {
     Std.getenv("NET_NAME") => myself;
 }
 
-spork ~ reportSelf(me.arg(0), myself);
+if (me.args() > 0) {
+    spork ~ reportSelf(me.arg(0), myself);
+    spork ~ recvOrk();
+} else {
+    spork ~ runBar();
+}
 spork ~ getKeyboard();
 spork ~ printLoop();
-// spork ~ runBar();
-spork ~ recvOrk();
 while (true) { 1::second => now; }
-
