@@ -28,7 +28,7 @@ s => LPF lpf => Envelope env => JCRev rev => dac;
 fun void setTone(int base) {
     env.keyOff();
     base => Std.mtof => osc1.freq;
-    
+
     base + 5 => Std.mtof => lpf.freq;
     //Math.random2(0, comp.cap() - 1) => int pick;
     //comp[pick] => int diff;
@@ -38,8 +38,8 @@ fun void setTone(int base) {
     env.keyOn();
 }
 
-[[0, 4, 7, 12, 16, 19], 
- [0, 4, 9, 12 ,16, 21], 
+[[0, 4, 7, 12, 16, 19],
+ [0, 4, 9, 12 ,16, 21],
  [0, 5, 9, 12 ,17, 21],
  [2, 7, 11, 14, 19, 23]] @=> int chords[][];
 
@@ -58,13 +58,13 @@ fun void stop() {
 fun void getKeyboard() {
     Hid hi;
     HidMsg msg;
-    
+
     0 => int device;
     if (!hi.openKeyboard(device)) me.exit();
-    
+
     while (true) {
         hi => now;
-        
+
         while (hi.recv(msg)) {
             if (msg.ascii == 32) { // space
                 if (msg.isButtonDown()) {
@@ -87,17 +87,47 @@ fun void runBar() {
     }
 }
 
-spork ~ getKeyboard();
-spork ~ runBar();
-while (true) { 1::second => now; }
+0 => int network;
 
-/*
-while (true) {
-    for (int i; i < chords.cap(); ++i) {
-        for (int j; j < chords[i].cap(); ++j) {
-            setTone(60 + chords[i][j]);
-            1::second => now;
+fun void recvOrk() {
+    OscRecv recv;
+    6449 => recv.port;
+    recv.listen();
+    recv.event("beat", "i") @=> OscEvent oe;
+
+    while (true) {
+        oe => now;
+        if (network == 0) {
+            1 => network;
+        }
+
+        while (oe.nextMsg() != 0) {
+            oe.getInt() => currentBar;
         }
     }
 }
-*/
+
+<<<"", "">>>;
+<<<"", "">>>;
+
+fun void print() {
+    if (network == 0) {
+        <<<"\033[2ANetwork: OFF", "">>>;
+    } else {
+        <<<"\033[2ANetwork: ON", "">>>;
+    }
+    <<<"[", currentBar ,"]">>>;
+}
+
+fun void printLoop() {
+    while (true) {
+        print();
+        100::ms => now;
+    }
+}
+
+spork ~ getKeyboard();
+spork ~ printLoop();
+// spork ~ runBar();
+spork ~ recvOrk();
+while (true) { 1::second => now; }
