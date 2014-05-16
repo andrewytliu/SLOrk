@@ -1,4 +1,5 @@
 8 => int beats;
+0.2 => float gain;
 
 SndBuf snd[2];
 int choose[beats];
@@ -7,6 +8,7 @@ int choose[beats];
 "hihat.wav"     => snd[1].read;
 
 for (int i; i < snd.cap(); ++i) {
+    0.0 => snd[i].gain;
     snd[i] => dac;
 }
 
@@ -15,8 +17,13 @@ for (int i; i < choose.cap(); ++i) {
 }
 
 fun void play(int i) {
-    0 => snd[i].pos;
-    snd[i].play();
+    choose[i] => int pick;
+
+    if (pick >= 0) {
+        gain => snd[pick].gain;
+        0 => snd[pick].pos;
+        snd[pick].play();
+    }
 }
 
 /*while (true) {
@@ -59,9 +66,8 @@ fun void getKeyboard() {
 fun void runBar() {
     while (true) {
         for (int i; i < beats; ++i) {
-            if (choose[i] > 0) {
-                play(choose[i]);
-            }
+            i => currentBeat;
+            play(i);
             250::ms => now;
         }
     }
@@ -83,6 +89,7 @@ fun void recvOrk() {
 
         while (oe.nextMsg() != 0) {
             oe.getInt() => currentBeat;
+            play(currentBeat);
         }
     }
 }
