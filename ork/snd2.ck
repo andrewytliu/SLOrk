@@ -90,7 +90,7 @@ fun void recvOrk() {
     OscRecv recv;
     6449 => recv.port;
     recv.listen();
-    recv.event("beat", "i") @=> OscEvent oe;
+    recv.event("group", "i") @=> OscEvent oe;
 
     while (true) {
         oe => now;
