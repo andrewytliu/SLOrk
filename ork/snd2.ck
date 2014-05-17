@@ -2,6 +2,8 @@ SawOsc osc1 => Gain s;
 SawOsc osc2 => s;
 SawOsc osc3 => s;
 SawOsc osc4 => s;
+[osc1,osc2,osc3,osc4] @=> SawOsc oscS[];
+
 s => JCRev rev => Delay d => Envelope env => BPF bpf => dac;
 d => Gain fbk => d;
 
@@ -12,18 +14,24 @@ d => Gain fbk => d;
 //0.5 => voc.controlOne;
 //2 => voc.controlTwo;
 
-0.2 => s.gain;
+.2 => rev.gain;
+0.5 => s.gain;
 15::ms => d.delay;
-0.99 => fbk.gain;
-10 => bpf.Q;
+0.5 => fbk.gain;
+.5=> bpf.Q;
 
-1.0 => osc2.gain;
-0.9 => osc1.gain;
-0.5 => osc3.gain;
-0.3 => osc4.gain;
+1.0 => osc1.gain;
+1.5 => osc2.gain;
+1.5 => osc3.gain;
+2.0 => osc4.gain;
 
-1::second => env.duration;
+0.0 => osc1.freq;
+0.0 => osc2.freq;
+0.0 => osc3.freq;
+0.0 => osc4.freq;
 
+.5::second => env.duration;
+/*
 fun void setTone(int base) {
     env.keyOff();
     base => Std.mtof => bpf.freq;
@@ -39,13 +47,47 @@ fun void setTone(int base) {
 [0, 4, 9],
 [0, 5, 9],
 [2, 7]] @=> int chords[][];
+*/
+[[0, 4, 7,12], 
+[-3, 0, 4, 9], 
+[-7, -3, 0, 5],
+[-5, -1, 2, 7]] @=> int chords[][];
 
 int currentBar;
+1 => int thickness ; // level: 1 - 4
 
+fun void setTone() {
+    env.keyOff();
+     
+    0.0 => oscS[0].freq;
+    0.0 => oscS[1].freq;
+    0.0 => oscS[2].freq;
+    0.0 => oscS[3].freq;
+    /*
+    <<<oscS[0].freq>>>;
+    <<<oscS[1].freq>>>;
+    <<<oscS[2].freq>>>;
+    <<<oscS[3].freq>>>;
+    ///<<<"Setting: ", base>>>;
+    <<<currentBar>>>;
+    chords[currentBar][0] + 48 => Std.mtof => bpf.freq;
+    */
+    for( 0 => int i ; i < thickness; i++){
+        chords[currentBar][i] + 48 => Std.mtof => oscS[i].freq;
+    }
+    
+    chords[currentBar][0] + 48 => Std.mtof => bpf.freq;
+    //chords[currentBar][0] + 48 => Std.mtof => osc1.freq;
+    //chords[currentBar][1] + 48 => Std.mtof => osc2.freq;
+    //chords[currentBar][2] + 48 => Std.mtof => osc3.freq;
+    //chords[currentBar][0] + 48 + 12 => Std.mtof => osc4.freq;
+
+    env.keyOn();
+}
 fun void play() {
-    Math.random2(0, chords[currentBar].cap() - 1) => int pick;
-    chords[currentBar][pick] => int note;
-    setTone(48 + note);
+    //Math.random2(0, chords[currentBar].cap() - 1) => int pick;
+    //chords[currentBar][pick] => int note;
+    setTone();//setTone(48 + note);
 }
 
 fun void stop() {
@@ -63,6 +105,7 @@ fun void getKeyboard() {
         hi => now;
 
         while (hi.recv(msg)) {
+            ///<<<msg.ascii>>>;
             if (msg.ascii == 32) { // space
                 if (msg.isButtonDown()) {
                     play();
@@ -70,6 +113,19 @@ fun void getKeyboard() {
                     stop();
                 }
             }
+            // thickness
+            if (msg.ascii ==81){ //Q
+                if (msg.isButtonDown()){
+                    if(thickness-1 >= 1)
+                        1 -=> thickness;
+                }
+            } else if (msg.ascii == 87){ //W
+                if (msg.isButtonDown()){
+                    if(thickness+1 <= 4 )
+                        1 +=> thickness;
+                }
+            }
+
         }
     }
 }
@@ -109,12 +165,15 @@ fun void recvOrk() {
 
 fun void print() {
     "\033[5D\033[2A" => string ctrl;
+    
     if (network == 0) {
         <<<ctrl, "Network: OFF", "">>>;
     } else {
         <<<ctrl, "Network: ON", "">>>;
     }
+    
     <<<" [", currentBar ,"]">>>;
+    <<<"thickness", thickness>>>;
 }
 
 fun void printLoop() {
