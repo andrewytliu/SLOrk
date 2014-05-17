@@ -23,11 +23,22 @@ s => LPF lpf => Envelope env => JCRev rev => dac;
 3 => osc3.harmonics;
 3 => osc4.harmonics;
 
+
+
 [8, 7, 5, 3] @=> int comp[];
+
+
+[[0, 4, 7, 12, 16, 19],
+ [0, 4, 9, 12 ,16, 21],
+ [0, 5, 9, 12 ,17, 21],
+ [2, 7, 11, 14, 19, 23]] @=> int chords[][];
+
+int currentBar;
+0 => int ornament; //0:: no ornament, 1: appoggiatura, 2: turu
 
 fun void setTone(int base) {
     env.keyOff();
-    base => Std.mtof => osc1.freq;
+    //base => Std.mtof => osc1.freq;
 
     base + 5 => Std.mtof => lpf.freq;
     //Math.random2(0, comp.cap() - 1) => int pick;
@@ -36,14 +47,29 @@ fun void setTone(int base) {
     //base + 7 => Std.mtof => osc2.freq;
     //base - 1 => Std.mtof => osc4.freq;
     env.keyOn();
+    if (ornament == 0 ) // no ornament
+        base => Std.mtof => osc1.freq;
+    else if (ornament == 1 ){ //
+        base -1  => Std.mtof => osc1.freq;
+        100::ms => now;
+        base => Std.mtof => osc1.freq;
+    } 
+    else if (ornament == 2) {
+        base   => Std.mtof => osc1.freq;
+        100::ms => now;
+        base + 2   => Std.mtof => osc1.freq;
+        50::ms => now;
+        base  => Std.mtof => osc1.freq;
+        50::ms => now;
+        base -1  => Std.mtof => osc1.freq;
+        50::ms => now;
+        base => Std.mtof => osc1.freq;
+
+
+    }
+
 }
 
-[[0, 4, 7, 12, 16, 19],
- [0, 4, 9, 12 ,16, 21],
- [0, 5, 9, 12 ,17, 21],
- [2, 7, 11, 14, 19, 23]] @=> int chords[][];
-
-int currentBar;
 
 fun void play() {
     Math.random2(0, chords[currentBar].cap() - 1) => int pick;
@@ -71,6 +97,18 @@ fun void getKeyboard() {
                     play();
                 } else {
                     stop();
+                }
+            }
+
+            if (msg.ascii ==81){ //Q
+                if (msg.isButtonDown()){
+                    if(ornament-1 >= 0)
+                        1 -=> ornament;
+                }
+            } else if (msg.ascii == 87){ //W
+                if (msg.isButtonDown()){
+                    if(ornament+1 <= 2 )
+                        1 +=> ornament;
                 }
             }
         }
@@ -118,6 +156,7 @@ fun void print() {
         <<<ctrl, "Network: ON", "">>>;
     }
     <<<" [", currentBar ,"]">>>;
+    <<<"ornament", ornament>>>;
 }
 
 fun void printLoop() {
