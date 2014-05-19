@@ -7,28 +7,13 @@ SawOsc osc4 => s;
 s => JCRev rev => Delay d => Envelope env => BPF bpf => dac;
 d => Gain fbk => d;
 
-//80 => Std.mtof => l.freq;
-//60 => Std.mtof => voc.freq;
-//20 => voc.harmonics;
-//0.5 => voc.noteOn;
-//0.5 => voc.controlOne;
-//2 => voc.controlTwo;
-
 .2 => rev.gain;
 0.5 => s.gain;
 15::ms => d.delay;
-0.5 => fbk.gain;
+0.75 => fbk.gain;
 .5=> bpf.Q;
 
-1.0 => osc1.gain;
-1.5 => osc2.gain;
-1.5 => osc3.gain;
-2.0 => osc4.gain;
-
-0.0 => osc1.freq;
-0.0 => osc2.freq;
-0.0 => osc3.freq;
-0.0 => osc4.freq;
+[1.0, 1.5, 1.5, 2.0] @=> float gains[];
 
 .5::second => env.duration;
 /*
@@ -48,8 +33,8 @@ fun void setTone(int base) {
 [0, 5, 9],
 [2, 7]] @=> int chords[][];
 */
-[[0, 4, 7,12], 
-[-3, 0, 4, 9], 
+[[0, 4, 7,12],
+[-3, 0, 4, 9],
 [-7, -3, 0, 5],
 [-5, -1, 2, 7]] @=> int chords[][];
 
@@ -58,24 +43,17 @@ int currentBar;
 
 fun void setTone() {
     env.keyOff();
-     
-    0.0 => oscS[0].freq;
-    0.0 => oscS[1].freq;
-    0.0 => oscS[2].freq;
-    0.0 => oscS[3].freq;
-    /*
-    <<<oscS[0].freq>>>;
-    <<<oscS[1].freq>>>;
-    <<<oscS[2].freq>>>;
-    <<<oscS[3].freq>>>;
-    ///<<<"Setting: ", base>>>;
-    <<<currentBar>>>;
-    chords[currentBar][0] + 48 => Std.mtof => bpf.freq;
-    */
-    for( 0 => int i ; i < thickness; i++){
-        chords[currentBar][i] + 48 => Std.mtof => oscS[i].freq;
+
+    for (int i; i < gains.cap(); ++i) {
+        0.0 => oscS[i].freq;
+        0.0 => oscS[i].gain;
     }
-    
+
+    for (int i ; i < thickness; i++){
+        chords[currentBar][i] + 48 => Std.mtof => oscS[i].freq;
+        gains[i] => oscS[i].gain;
+    }
+
     chords[currentBar][0] + 48 => Std.mtof => bpf.freq;
     //chords[currentBar][0] + 48 => Std.mtof => osc1.freq;
     //chords[currentBar][1] + 48 => Std.mtof => osc2.freq;
@@ -162,18 +140,19 @@ fun void recvOrk() {
 
 <<<"", "">>>;
 <<<"", "">>>;
+<<<"", "">>>;
 
 fun void print() {
-    "\033[5D\033[2A" => string ctrl;
-    
+    "\033[5D\033[3A" => string ctrl;
+
     if (network == 0) {
-        <<<ctrl, "Network: OFF", "">>>;
+        <<<ctrl, "        Network:   OFF", "">>>;
     } else {
-        <<<ctrl, "Network: ON", "">>>;
+        <<<ctrl, "        Network:   ON", "">>>;
     }
-    
+
+    <<<" [Q] [W] Thickness:", thickness>>>;
     <<<" [", currentBar ,"]">>>;
-    <<<"thickness", thickness>>>;
 }
 
 fun void printLoop() {
