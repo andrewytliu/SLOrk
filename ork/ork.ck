@@ -7,7 +7,7 @@ OscSend xmit[maxClient];
 6449 => int port;
 
 250::ms => dur beat;
-4 => int barPerGroup;
+8 => int barPerGroup;
 8 => int beatPerBar;
 
 fun void loop() {
