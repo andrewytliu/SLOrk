@@ -53,7 +53,7 @@ fun void setTone(int base) {
         base -1  => Std.mtof => osc1.freq;
         100::ms => now;
         base => Std.mtof => osc1.freq;
-    } 
+    }
     else if (ornament == 2) {
         base   => Std.mtof => osc1.freq;
         100::ms => now;
@@ -64,10 +64,7 @@ fun void setTone(int base) {
         base -1  => Std.mtof => osc1.freq;
         50::ms => now;
         base => Std.mtof => osc1.freq;
-
-
     }
-
 }
 
 
@@ -147,16 +144,19 @@ fun void recvOrk() {
 
 <<<"", "">>>;
 <<<"", "">>>;
+<<<"", "">>>;
 
 fun void print() {
-    "\033[5D\033[2A" => string ctrl;
+    "\033[5D\033[3A" => string ctrl;
+
     if (network == 0) {
-        <<<ctrl, "Network: OFF", "">>>;
+        <<<ctrl, "        Network:  OFF", "">>>;
     } else {
-        <<<ctrl, "Network: ON", "">>>;
+        <<<ctrl, "        Network:  ON", "">>>;
     }
+
+    <<<" [Q] [W] Ornament:", ornament>>>;
     <<<" [", currentBar ,"]">>>;
-    <<<"ornament", ornament>>>;
 }
 
 fun void printLoop() {
