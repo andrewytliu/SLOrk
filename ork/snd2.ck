@@ -14,6 +14,10 @@ d => Gain fbk => d;
 .5=> bpf.Q;
 
 [1.0, 1.5, 1.5, 2.0] @=> float gains[];
+for (int i; i < gains.cap(); ++i) {
+    0.0 => oscS[i].freq;
+    0.0 => oscS[i].gain;
+}
 
 .5::second => env.duration;
 /*
@@ -43,6 +47,7 @@ fun void setTone(int base) {
 [-5, -1, 2, 7]] @=> int chords[][];
 
 int currentBar;
+0 => float volume;
 1 => int thickness ; // level: 1 - 4
 
 fun void setTone() {
@@ -55,7 +60,7 @@ fun void setTone() {
 
     for (int i ; i < thickness; i++){
         chords[currentBar][i] + 48 => Std.mtof => oscS[i].freq;
-        gains[i] => oscS[i].gain;
+        gains[i]*volume => oscS[i].gain;
     }
 
     chords[currentBar][0] + 48 => Std.mtof => bpf.freq;
@@ -106,7 +111,18 @@ fun void getKeyboard() {
                     if(thickness+1 <= 4 )
                         1 +=> thickness;
                 }
-            }
+            } else if (msg.ascii == 90) { // Z
+                if (msg.isButtonDown()){
+                    if(volume - 0.2 >=0) {
+                        0.2 -=> volume;
+                    }
+                }   
+
+            } else if (msg.ascii == 88)  {//X
+                if (msg.isButtonDown()){
+                    0.2 +=> volume;                   
+                }
+            } 
 
         }
     }
@@ -145,9 +161,10 @@ fun void recvOrk() {
 <<<"", "">>>;
 <<<"", "">>>;
 <<<"", "">>>;
+<<<"", "">>>;
 
 fun void print() {
-    "\033[5D\033[3A" => string ctrl;
+    "\033[5D\033[4A" => string ctrl;
 
     if (network == 0) {
         <<<ctrl, "        Network:   OFF", "">>>;
@@ -156,6 +173,7 @@ fun void print() {
     }
 
     <<<" [Q] [W] Thickness:", thickness>>>;
+    <<<" [Z] [X] Volume:", volume>>>;
     <<<" [", currentBar ,"]">>>;
 }
 
