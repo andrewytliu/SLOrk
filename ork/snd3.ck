@@ -38,6 +38,7 @@ s => LPF lpf => Envelope env => JCRev rev => dac;
  [2, 7, 11, 14, 19, 23]] @=> int chords[][];
 
 int currentBar;
+0 => float volume;
 0 => int ornament; //0:: no ornament, 1: appoggiatura, 2: turu
 
 fun void setTone(int base) {
@@ -45,6 +46,7 @@ fun void setTone(int base) {
     //base => Std.mtof => osc1.freq;
 
     base + 5 => Std.mtof => lpf.freq;
+    volume => osc1.gain;
     //Math.random2(0, comp.cap() - 1) => int pick;
     //comp[pick] => int diff;
     //base - diff => Std.mtof => osc2.freq;
@@ -93,6 +95,7 @@ fun void getKeyboard() {
         hi => now;
 
         while (hi.recv(msg)) {
+            
             if (msg.ascii == 32) { // space
                 if (msg.isButtonDown()) {
                     play();
@@ -111,7 +114,20 @@ fun void getKeyboard() {
                     if(ornament+1 <= 2 )
                         1 +=> ornament;
                 }
-            }
+            } else if (msg.ascii == 90) { // Z
+                if (msg.isButtonDown()){
+                    if(volume - 0.2 >=0) {
+                        0.2 -=> volume;
+                    }
+                }   
+
+            } else if (msg.ascii == 88)  {//X
+                if (msg.isButtonDown()){
+                    0.2 +=> volume;                   
+                }
+            } 
+
+
         }
     }
 }
@@ -149,9 +165,9 @@ fun void recvOrk() {
 <<<"", "">>>;
 <<<"", "">>>;
 <<<"", "">>>;
-
+<<<"", "">>>;
 fun void print() {
-    "\033[5D\033[3A" => string ctrl;
+    "\033[5D\033[4A" => string ctrl;
 
     if (network == 0) {
         <<<ctrl, "        Network:  OFF", "">>>;
@@ -160,6 +176,7 @@ fun void print() {
     }
 
     <<<" [Q] [W] Ornament:", ornament>>>;
+    <<<" [Z] [X] Volume:", volume>>>;
     <<<" [", currentBar ,"]">>>;
 }
 
