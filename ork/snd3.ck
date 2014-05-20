@@ -28,19 +28,37 @@ s => LPF lpf => Envelope env => JCRev rev => dac;
 [8, 7, 5, 3] @=> int comp[];
 
 
-[[0, 4, 7, 12, 16, 19],
+[[[0, 4, 7, 12, 16, 19],
  [0, 4, 9, 12 ,16, 21],
  [0, 5, 9, 12 ,17, 21],
  [2, 7, 11, 14, 19, 23],
  [0, 4, 7, 12, 16, 19],
  [0, 4, 9, 12 ,16, 21],
  [0, 5, 9, 12 ,17, 21],
- [2, 7, 11, 14, 19, 23]] @=> int chords[][];
+ [2, 7, 11, 14, 19, 23]],
+
+ [[0, 4, 7, 12, 16, 19],
+ [0, 4, 9, 12 ,16, 21],
+ [0, 5, 9, 12 ,17, 21],
+ [2, 7, 11, 14, 19, 23],
+ [-1, 2, 4, 8, 11, 14],
+ [0, 4, 9, 12 ,16, 21],
+ [2, 5, 9, 14 ,17, 21],
+ [2, 7, 11, 14, 17, 19]],
+
+  [[0, 4, 7, 12, 16, 19],
+ [-1, 2, 4, 7 , 11, 16],
+ [0, 4, 5, 9 , 12, 16],
+ [0, 4, 7, 11, 12, 16],
+ [2, 5, 9, 12 , 14, 17],
+ [0, 4, 7, 12, 16, 19],
+ [2, 5, 9, 12 , 14, 17],
+ [2, 7, 11, 14, 17, 19]]] @=> int chords[][][];
 
 int currentBar;
 0 => float volume;
 0 => int ornament; //0:: no ornament, 1: appoggiatura, 2: turu
-
+0 => int chordno;
 fun void setTone(int base) {
     env.keyOff();
     //base => Std.mtof => osc1.freq;
@@ -75,8 +93,8 @@ fun void setTone(int base) {
 
 
 fun void play() {
-    Math.random2(0, chords[currentBar].cap() - 1) => int pick;
-    chords[currentBar][pick] => int note;
+    Math.random2(0, chords[chordno][currentBar].cap() - 1) => int pick;
+    chords[chordno][currentBar][pick] => int note;
     setTone(60 + note);
 }
 
@@ -95,7 +113,6 @@ fun void getKeyboard() {
         hi => now;
 
         while (hi.recv(msg)) {
-            
             if (msg.ascii == 32) { // space
                 if (msg.isButtonDown()) {
                     play();
@@ -125,7 +142,20 @@ fun void getKeyboard() {
                 if (msg.isButtonDown()){
                     0.2 +=> volume;                   
                 }
-            } 
+            } else if (msg.ascii == 65) { // A
+                if (msg.isButtonDown()){
+                    if( chordno - 1 >=0) {
+                        1 -=> chordno;
+                    }
+                }   
+
+            } else if (msg.ascii == 83)  {//S
+                if (msg.isButtonDown()){
+                    if(chordno + 1 <=2) {
+                        1 +=> chordno;
+                    }                   
+                }
+            }
 
 
         }
@@ -166,8 +196,9 @@ fun void recvOrk() {
 <<<"", "">>>;
 <<<"", "">>>;
 <<<"", "">>>;
+<<<"", "">>>;
 fun void print() {
-    "\033[5D\033[4A" => string ctrl;
+    "\033[5D\033[5A" => string ctrl;
 
     if (network == 0) {
         <<<ctrl, "        Network:  OFF", "">>>;
@@ -176,6 +207,7 @@ fun void print() {
     }
 
     <<<" [Q] [W] Ornament:", ornament>>>;
+    <<<" [A] [S] ChordNo:", chordno>>>;
     <<<" [Z] [X] Volume:", volume>>>;
     <<<" [", currentBar ,"]">>>;
 }

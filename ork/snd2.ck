@@ -37,17 +37,38 @@ fun void setTone(int base) {
 [0, 5, 9],
 [2, 7]] @=> int chords[][];
 */
-[[0, 4, 7,12],
+[[[0, 4, 7,12],
 [-3, 0, 4, 9],
 [-7, -3, 0, 5],
 [-5, -1, 2, 7],
 [0, 4, 7,12],
 [-3, 0, 4, 9],
 [-7, -3, 0, 5],
-[-5, -1, 2, 7]] @=> int chords[][];
+[-5, -1, 2, 7]],
+
+[[0, 4, 7,12],
+[-3, 0, 4, 9],
+[-7, -3, 0, 5],
+[-5, -1, 2, 7],
+[-8, -4, -1,4],
+[-3, 0, 4, 9],
+[-10, -7, -3, 2],
+[-5, -1, 2, 7]],
+
+[[0, 4, 7,12],
+[-1, 0, 7, 12],
+[-3, 4, 5, 12],
+[-5, 0, 4, 11],
+[-7, 0, 2, 9],
+[-8, 0, 7, 11],
+[-10,0, 5, 9],
+[-5, 2, 7,11]]
+
+] @=> int chords[][][];
 
 int currentBar;
 0 => float volume;
+0 => int chordno;
 1 => int thickness ; // level: 1 - 4
 
 fun void setTone() {
@@ -59,11 +80,11 @@ fun void setTone() {
     }
 
     for (int i ; i < thickness; i++){
-        chords[currentBar][i] + 48 => Std.mtof => oscS[i].freq;
+        chords[chordno][currentBar][i] + 48 => Std.mtof => oscS[i].freq;
         gains[i]*volume => oscS[i].gain;
     }
 
-    chords[currentBar][0] + 48 => Std.mtof => bpf.freq;
+    chords[chordno][currentBar][0] + 48 => Std.mtof => bpf.freq;
     //chords[currentBar][0] + 48 => Std.mtof => osc1.freq;
     //chords[currentBar][1] + 48 => Std.mtof => osc2.freq;
     //chords[currentBar][2] + 48 => Std.mtof => osc3.freq;
@@ -122,7 +143,20 @@ fun void getKeyboard() {
                 if (msg.isButtonDown()){
                     0.2 +=> volume;                   
                 }
-            } 
+            } else if (msg.ascii == 65) { // A
+                if (msg.isButtonDown()){
+                    if( chordno - 1 >=0) {
+                        1 -=> chordno;
+                    }
+                }   
+
+            } else if (msg.ascii == 83)  {//S
+                if (msg.isButtonDown()){
+                    if(chordno + 1 <=2) {
+                        1 +=> chordno;
+                    }                   
+                }
+            }
 
         }
     }
@@ -162,9 +196,9 @@ fun void recvOrk() {
 <<<"", "">>>;
 <<<"", "">>>;
 <<<"", "">>>;
-
+<<<"", "">>>;
 fun void print() {
-    "\033[5D\033[4A" => string ctrl;
+    "\033[5D\033[5A" => string ctrl;
 
     if (network == 0) {
         <<<ctrl, "        Network:   OFF", "">>>;
@@ -173,6 +207,7 @@ fun void print() {
     }
 
     <<<" [Q] [W] Thickness:", thickness>>>;
+    <<<" [A] [S] ChordNo:", chordno>>>;
     <<<" [Z] [X] Volume:", volume>>>;
     <<<" [", currentBar ,"]">>>;
 }
