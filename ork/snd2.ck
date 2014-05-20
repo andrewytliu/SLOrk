@@ -1,22 +1,24 @@
-SawOsc osc1 => Gain s;
-SawOsc osc2 => s;
-SawOsc osc3 => s;
-SawOsc osc4 => s;
-[osc1,osc2,osc3,osc4] @=> SawOsc oscS[];
+SawOsc osc1 => BPF bpf1 => Gain s;
+SawOsc osc2 => BPF bpf2 => s;
+SawOsc osc3 => BPF bpf3 => s;
+SawOsc osc4 => BPF bpf4 => s;
 
-s => JCRev rev => Delay d => Envelope env => BPF bpf => dac;
+[osc1,osc2,osc3,osc4] @=> SawOsc oscS[];
+[bpf1,bpf2,bpf3,bpf4] @=> BPF bpfS[];
+
+s => JCRev rev => Delay d => Envelope env => dac;
 d => Gain fbk => d;
 
 .2 => rev.gain;
 0.5 => s.gain;
 15::ms => d.delay;
 0.75 => fbk.gain;
-.5=> bpf.Q;
 
 [1.0, 1.5, 1.5, 2.0] @=> float gains[];
 for (int i; i < gains.cap(); ++i) {
     0.0 => oscS[i].freq;
     0.0 => oscS[i].gain;
+    0.5 => bpfS[i].Q;
 }
 
 .5::second => env.duration;
@@ -80,11 +82,13 @@ fun void setTone() {
     }
 
     for (int i ; i < thickness; i++){
-        chords[chordno][currentBar][i] + 48 => Std.mtof => oscS[i].freq;
-        gains[i]*volume => oscS[i].gain;
+        chords[chordno][currentBar][i] + 48 => int note;
+        note => Std.mtof => oscS[i].freq;
+        note => Std.mtof => bpfS[i].freq;
+        gains[i] * volume => oscS[i].gain;
     }
 
-    chords[chordno][currentBar][0] + 48 => Std.mtof => bpf.freq;
+
     //chords[currentBar][0] + 48 => Std.mtof => osc1.freq;
     //chords[currentBar][1] + 48 => Std.mtof => osc2.freq;
     //chords[currentBar][2] + 48 => Std.mtof => osc3.freq;
@@ -137,24 +141,24 @@ fun void getKeyboard() {
                     if(volume - 0.2 >=0) {
                         0.2 -=> volume;
                     }
-                }   
+                }
 
             } else if (msg.ascii == 88)  {//X
                 if (msg.isButtonDown()){
-                    0.2 +=> volume;                   
+                    0.2 +=> volume;
                 }
             } else if (msg.ascii == 65) { // A
                 if (msg.isButtonDown()){
                     if( chordno - 1 >=0) {
                         1 -=> chordno;
                     }
-                }   
+                }
 
             } else if (msg.ascii == 83)  {//S
                 if (msg.isButtonDown()){
                     if(chordno + 1 <=2) {
                         1 +=> chordno;
-                    }                   
+                    }
                 }
             }
 
@@ -164,7 +168,7 @@ fun void getKeyboard() {
 
 fun void runBar() {
     while (true) {
-        for (int i; i < chords.cap(); ++i) {
+        for (int i; i < 8; ++i) {
             i => currentBar;
             2::second => now;
             //stop();
@@ -201,14 +205,14 @@ fun void print() {
     "\033[5D\033[5A" => string ctrl;
 
     if (network == 0) {
-        <<<ctrl, "        Network:   OFF", "">>>;
+        <<<ctrl, " -   +  Network:   OFF", "">>>;
     } else {
-        <<<ctrl, "        Network:   ON", "">>>;
+        <<<ctrl, " -   +  Network:   ON", "">>>;
     }
 
     <<<" [Q] [W] Thickness:", thickness>>>;
-    <<<" [A] [S] ChordNo:", chordno>>>;
-    <<<" [Z] [X] Volume:", volume>>>;
+    <<<" [A] [S] ChordNo:  ", chordno>>>;
+    <<<" [Z] [X] Volume:   ", volume>>>;
     <<<" [", currentBar ,"]">>>;
 }
 

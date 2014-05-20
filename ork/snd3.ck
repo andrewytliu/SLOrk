@@ -1,29 +1,11 @@
-Blit osc1 => Gain s;
-Blit osc2 => s;
-Blit osc3 => s;
-Blit osc4 => s;
+Blit osc => Gain s;
 s => LPF lpf => Envelope env => JCRev rev => dac;
-
-//80 => Std.mtof => l.freq;
-//60 => Std.mtof => voc.freq;
-//20 => voc.harmonics;
-//0.5 => voc.noteOn;
-//0.5 => voc.controlOne;
-//2 => voc.controlTwo;
 
 0.5 => s.gain;
 0.1 => lpf.Q;
 
-0.0 => osc2.gain;
-1.0 => osc1.gain;
-0.0 => osc3.gain;
-0.0 => osc4.gain;
-10 => osc1.harmonics;
-3 => osc2.harmonics;
-3 => osc3.harmonics;
-3 => osc4.harmonics;
-
-
+1.0 => osc.gain;
+10 => osc.harmonics;
 
 [8, 7, 5, 3] @=> int comp[];
 
@@ -61,33 +43,28 @@ int currentBar;
 0 => int chordno;
 fun void setTone(int base) {
     env.keyOff();
-    //base => Std.mtof => osc1.freq;
 
     base + 5 => Std.mtof => lpf.freq;
-    volume => osc1.gain;
-    //Math.random2(0, comp.cap() - 1) => int pick;
-    //comp[pick] => int diff;
-    //base - diff => Std.mtof => osc2.freq;
-    //base + 7 => Std.mtof => osc2.freq;
-    //base - 1 => Std.mtof => osc4.freq;
+    volume => osc.gain;
+
     env.keyOn();
     if (ornament == 0 ) // no ornament
-        base => Std.mtof => osc1.freq;
+        base => Std.mtof => osc.freq;
     else if (ornament == 1 ){ //
-        base -1  => Std.mtof => osc1.freq;
+        base -1  => Std.mtof => osc.freq;
         100::ms => now;
-        base => Std.mtof => osc1.freq;
+        base => Std.mtof => osc.freq;
     }
     else if (ornament == 2) {
-        base   => Std.mtof => osc1.freq;
+        base   => Std.mtof => osc.freq;
         100::ms => now;
-        base + 2   => Std.mtof => osc1.freq;
+        base + 2   => Std.mtof => osc.freq;
         50::ms => now;
-        base  => Std.mtof => osc1.freq;
+        base  => Std.mtof => osc.freq;
         50::ms => now;
-        base -1  => Std.mtof => osc1.freq;
+        base -1  => Std.mtof => osc.freq;
         50::ms => now;
-        base => Std.mtof => osc1.freq;
+        base => Std.mtof => osc.freq;
     }
 }
 
@@ -136,24 +113,24 @@ fun void getKeyboard() {
                     if(volume - 0.2 >=0) {
                         0.2 -=> volume;
                     }
-                }   
+                }
 
             } else if (msg.ascii == 88)  {//X
                 if (msg.isButtonDown()){
-                    0.2 +=> volume;                   
+                    0.2 +=> volume;
                 }
             } else if (msg.ascii == 65) { // A
                 if (msg.isButtonDown()){
                     if( chordno - 1 >=0) {
                         1 -=> chordno;
                     }
-                }   
+                }
 
             } else if (msg.ascii == 83)  {//S
                 if (msg.isButtonDown()){
                     if(chordno + 1 <=2) {
                         1 +=> chordno;
-                    }                   
+                    }
                 }
             }
 
@@ -164,7 +141,7 @@ fun void getKeyboard() {
 
 fun void runBar() {
     while (true) {
-        for (int i; i < chords.cap(); ++i) {
+        for (int i; i < 8; ++i) {
             i => currentBar;
             2::second => now;
             //stop();
@@ -201,14 +178,14 @@ fun void print() {
     "\033[5D\033[5A" => string ctrl;
 
     if (network == 0) {
-        <<<ctrl, "        Network:  OFF", "">>>;
+        <<<ctrl, " -   +  Network:  OFF", "">>>;
     } else {
-        <<<ctrl, "        Network:  ON", "">>>;
+        <<<ctrl, " -   +  Network:  ON", "">>>;
     }
 
     <<<" [Q] [W] Ornament:", ornament>>>;
-    <<<" [A] [S] ChordNo:", chordno>>>;
-    <<<" [Z] [X] Volume:", volume>>>;
+    <<<" [A] [S] ChordNo: ", chordno>>>;
+    <<<" [Z] [X] Volume:  ", volume>>>;
     <<<" [", currentBar ,"]">>>;
 }
 
