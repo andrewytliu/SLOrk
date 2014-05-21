@@ -35,7 +35,18 @@ s => LPF lpf => Envelope env => JCRev rev => dac;
  [2, 5, 9, 12 , 14, 17],
  [0, 4, 7, 12, 16, 19],
  [2, 5, 9, 12 , 14, 17],
- [2, 7, 11, 14, 17, 19]]] @=> int chords[][][];
+ [2, 7, 11, 14, 17, 19]],
+
+[[0, 4, 7, 12, 16, 19],
+ [0, 4, 7, 12, 16, 19],
+ [0, 3, 7, 12, 15, 19],
+ [0, 3, 7, 12, 15, 19],
+ [0, 4, 7, 12, 16, 19],
+ [0, 4, 7, 12, 16, 19],
+ [0, 4, 7, 12, 16, 19],
+ [0, 4, 7, 12, 16, 19]]
+
+ ] @=> int chords[][][];
 
 int currentBar;
 0 => float volume;
@@ -65,6 +76,18 @@ fun void setTone(int base) {
         base -1  => Std.mtof => osc.freq;
         50::ms => now;
         base => Std.mtof => osc.freq;
+    } else if (ornament ==3 ){
+        base => Std.mtof => osc.freq;
+        100::ms => now;
+        base + 12  => Std.mtof => osc.freq;
+        100::ms => now;
+        base => Std.mtof => osc.freq;
+        100::ms => now;
+        base + 12  => Std.mtof => osc.freq;
+        100::ms => now;
+        base => Std.mtof => osc.freq;
+        100::ms => now;
+        
     }
 }
 
@@ -105,7 +128,7 @@ fun void getKeyboard() {
                 }
             } else if (msg.ascii == 87){ //W
                 if (msg.isButtonDown()){
-                    if(ornament+1 <= 2 )
+                    if(ornament+1 <= 3 )
                         1 +=> ornament;
                 }
             } else if (msg.ascii == 90) { // Z
@@ -128,7 +151,7 @@ fun void getKeyboard() {
 
             } else if (msg.ascii == 83)  {//S
                 if (msg.isButtonDown()){
-                    if(chordno + 1 <=2) {
+                    if(chordno + 1 <=3) {
                         1 +=> chordno;
                     }
                 }
