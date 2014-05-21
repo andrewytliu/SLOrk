@@ -14,7 +14,7 @@ d => Gain fbk => d;
 15::ms => d.delay;
 0.75 => fbk.gain;
 
-[1.0, 1.5, 1.5, 2.0] @=> float gains[];
+[1.0, 1.0, 1.0, 1.0] @=> float gains[];
 for (int i; i < gains.cap(); ++i) {
     0.0 => oscS[i].freq;
     0.0 => oscS[i].gain;
@@ -147,14 +147,14 @@ fun void getKeyboard() {
                 }
             } else if (msg.ascii == 90) { // Z
                 if (msg.isButtonDown()){
-                    if(volume - 0.2 >=0) {
-                        0.2 -=> volume;
+                    if(volume - 0.05 >=0) {
+                        0.05 -=> volume;
                     }
                 }
 
             } else if (msg.ascii == 88)  {//X
                 if (msg.isButtonDown()){
-                    0.2 +=> volume;
+                    0.05 +=> volume;
                 }
             } else if (msg.ascii == 65) { // A
                 if (msg.isButtonDown()){
