@@ -1,13 +1,16 @@
 8 => int beats;
 4 => int bars;
-0.2 => float gain;
 
 0 => int currentBeat;
 0 => int currentBar;
 
+Gain g;
 SndBuf snd[3];
 SndBuf glock[12];
 int choose[beats];
+
+0.0 => float vol;
+0.0 => g.gain;
 
 [[0, 4, 7],
  [0, 4, 9],
@@ -37,12 +40,12 @@ int choose[beats];
 
 for (int i; i < glock.cap(); ++i) {
     0.0 => glock[i].gain;
-    glock[i] => dac;
+    glock[i] => g => dac;
 }
 
 for (int i; i < snd.cap(); ++i) {
     0.0 => snd[i].gain;
-    snd[i] => dac;
+    snd[i] => g => dac;
 }
 
 for (int i; i < choose.cap(); ++i) {
@@ -52,13 +55,14 @@ for (int i; i < choose.cap(); ++i) {
 fun void play(int i) {
     choose[i] => int pick;
 
+    vol => g.gain;
     if (pick == 3) {
         Math.random2(0, chords[currentBar].cap() - 1) => int cpick;
-        gain => glock[chords[currentBar][cpick]].gain;
+        vol => glock[chords[currentBar][cpick]].gain;
         0 => glock[chords[currentBar][cpick]].pos;
         glock[cpick].play();
     } else if (pick >= 0) {
-        gain => snd[pick].gain;
+        vol => snd[pick].gain;
         0 => snd[pick].pos;
         snd[pick].play();
     }
@@ -113,6 +117,9 @@ fun void getKeyboard() {
             if (c == 'n') toggle(5, 3);
             if (c == 'm') toggle(6, 3);
             if (c == ',') toggle(7, 3);
+
+            if (c == '-') 0.05 -=> vol;
+            if (c == '=') 0.05 +=> vol;
         }
     }
 }
@@ -162,7 +169,7 @@ fun void print() {
     } else {
         <<<ctrl, "Network: ON", "">>>;
     }
-    <<<" [", currentBar ,"] [", currentBeat, "]">>>;
+    <<<" [", currentBar ,"] [", currentBeat, "], Vol:", vol>>>;
     <<<" [", choose[0], "] [", choose[1], "] [", choose[2], "] [", choose[3], "] [", choose[4], "] [", choose[5], "] [", choose[6], "] [", choose[7], "]">>>;
 }
 
