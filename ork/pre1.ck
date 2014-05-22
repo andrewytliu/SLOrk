@@ -88,9 +88,10 @@ fun void play(int i) {
     vol => g.gain;
     if (pick == 3) {
         Math.random2(0, chords[chordno][currentBar].cap() - 1) => int cpick;
-        vol => glock[chords[chordno][currentBar][cpick]].gain;
-        0 => glock[chords[chordno][currentBar][cpick]].pos;
-        glock[cpick].play();
+        chords[chordno][currentBar][cpick] => int note;
+        vol => glock[note].gain;
+        0 => glock[note].pos;
+        glock[note].play();
     } else if (pick >= 0) {
         vol => snd[pick].gain;
         0 => snd[pick].pos;
@@ -148,8 +149,8 @@ fun void getKeyboard() {
             if (c == 'm') toggle(6, 3);
             if (c == ',') toggle(7, 3);
 
-            if (c == '.') 0.05 -=> vol;
-            if (c == '/') 0.05 +=> vol;
+            if (c == '.') 0.01 -=> vol;
+            if (c == '/') 0.01 +=> vol;
             if (c == 'l' && chordno - 1 >= 0) 1 -=> chordno;
             if (c == ';' && chordno + 1 <= 3) 1 +=> chordno;
         }

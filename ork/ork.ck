@@ -52,6 +52,21 @@ fun void recvReport()
 
         while( oe.nextMsg() != 0 ) {
             oe.getString()  => string client;
+
+            0 => int flag;
+
+            for (int i; i < clients; ++i) {
+                if (hostnames[i] == client) {
+                    1 => flag;
+                    break;
+                }
+            }
+
+            if (flag != 0) {
+                <<<"Reconnecting:", client>>>;
+                continue;
+            }
+
             <<<"Reporting:", client>>>;
             setupClient(client);
         }
