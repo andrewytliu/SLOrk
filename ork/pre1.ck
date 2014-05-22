@@ -12,14 +12,44 @@ int choose[beats];
 0.0 => float vol;
 0.0 => g.gain;
 
-[[0, 4, 7],
+[[[0, 4, 7],
  [0, 4, 9],
  [0, 5, 9],
  [2, 7, 11],
  [0, 4, 7],
  [0, 4, 9],
  [0, 5, 9],
- [2, 7, 11]] @=> int chords[][];
+ [2, 7, 11]],
+
+ [[0, 4, 7],
+ [0, 4, 9],
+ [0, 5, 9],
+ [2, 7, 11],
+ [2, 4, 8],
+ [0, 4, 9],
+ [2, 5, 9],
+ [2, 7, 11]],
+
+ [[0, 4, 7],
+ [2, 4, 7],
+ [0, 4, 5],
+ [0, 4, 7],
+ [2, 5, 9],
+ [0, 4, 7],
+ [2, 5, 9],
+ [2, 7, 11]],
+
+ [[0, 4, 7],
+ [0, 4, 7],
+ [0, 3, 7],
+ [0, 3, 7],
+ [0, 4, 7],
+ [0, 4, 7],
+ [0, 4, 7],
+ [0, 4, 7]]
+ ] @=> int chords[][][];
+
+0 => int chordno;
 
 "snare-hop.wav" => snd[0].read;
 "hihat.wav"     => snd[1].read;
@@ -57,9 +87,9 @@ fun void play(int i) {
 
     vol => g.gain;
     if (pick == 3) {
-        Math.random2(0, chords[currentBar].cap() - 1) => int cpick;
-        vol => glock[chords[currentBar][cpick]].gain;
-        0 => glock[chords[currentBar][cpick]].pos;
+        Math.random2(0, chords[chordno][currentBar].cap() - 1) => int cpick;
+        vol => glock[chords[chordno][currentBar][cpick]].gain;
+        0 => glock[chords[chordno][currentBar][cpick]].pos;
         glock[cpick].play();
     } else if (pick >= 0) {
         vol => snd[pick].gain;
@@ -118,8 +148,10 @@ fun void getKeyboard() {
             if (c == 'm') toggle(6, 3);
             if (c == ',') toggle(7, 3);
 
-            if (c == '-') 0.05 -=> vol;
-            if (c == '=') 0.05 +=> vol;
+            if (c == '.') 0.05 -=> vol;
+            if (c == '/') 0.05 +=> vol;
+            if (c == 'l' && chordno - 1 >= 0) 1 -=> chordno;
+            if (c == ';' && chordno + 1 <= 3) 1 +=> chordno;
         }
     }
 }
@@ -161,15 +193,21 @@ fun void recvOrk() {
 <<<"", "">>>;
 <<<"", "">>>;
 <<<"", "">>>;
+<<<"", "">>>;
+<<<"", "">>>;
+<<<"", "">>>;
 
 fun void print() {
-    "\033[5D\033[3A" => string ctrl;
+    "\033[5D\033[6A" => string ctrl;
     if (network == 0) {
-        <<<ctrl, "Network: OFF", "">>>;
+        <<<ctrl, " -   +  Network: OFF", "">>>;
     } else {
-        <<<ctrl, "Network: ON", "">>>;
+        <<<ctrl, " -   +  Network: ON", "">>>;
     }
-    <<<" [", currentBar ,"] [", currentBeat, "], Vol:", vol>>>;
+    <<<" [L] [;] ChordNo:", chordno>>>;
+    <<<" [.] [/] Volume: ", vol>>>;
+    <<<" [", currentBar ,"] [", currentBeat, "], 0 => snare, 1 => hihat, 2 => kick, 3 => glockenspiel">>>;
+    <<<"", "">>>;
     <<<" [", choose[0], "] [", choose[1], "] [", choose[2], "] [", choose[3], "] [", choose[4], "] [", choose[5], "] [", choose[6], "] [", choose[7], "]">>>;
 }
 
