@@ -133,14 +133,14 @@ fun void getKeyboard() {
                 }
             } else if (msg.ascii == 90) { // Z
                 if (msg.isButtonDown()){
-                    if(volume - 0.2 >=0) {
-                        0.2 -=> volume;
+                    if(volume - 0.05 >=0) {
+                        0.05 -=> volume;
                     }
                 }
 
             } else if (msg.ascii == 88)  {//X
                 if (msg.isButtonDown()){
-                    0.2 +=> volume;
+                    0.05 +=> volume;
                 }
             } else if (msg.ascii == 65) { // A
                 if (msg.isButtonDown()){
