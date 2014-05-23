@@ -1,11 +1,14 @@
-Blit osc => Gain s;
-s => LPF lpf => Envelope env => JCRev rev => dac;
+Blit oscb => LPF lpf => Envelope envb => JCRev rev => Gain s => dac;
+SawOsc oscs => Envelope envs => s;
+
 
 0.5 => s.gain;
 0.1 => lpf.Q;
 
-1.0 => osc.gain;
-10 => osc.harmonics;
+10.0 => oscb.gain;
+0.0 => oscs.gain;
+10 => oscb.harmonics;
+0 => int overdrive;
 
 [8, 7, 5, 3] @=> int comp[];
 
@@ -49,45 +52,58 @@ s => LPF lpf => Envelope env => JCRev rev => dac;
  ] @=> int chords[][][];
 
 int currentBar;
-0 => float volume;
+0.5 => float volume;
 0 => int ornament; //0:: no ornament, 1: appoggiatura, 2: turu
 0 => int chordno;
+
+fun void setFreq(int freq) {
+    freq => Std.mtof => oscb.freq;
+    freq => Std.mtof => oscs.freq;
+}
+
+fun Envelope getEnv() {
+    if (overdrive == 0) {
+        return envb;
+    } else {
+        return envs;
+    }
+}
+
 fun void setTone(int base) {
-    env.keyOff();
+    getEnv().keyOff();
 
     base + 5 => Std.mtof => lpf.freq;
-    volume => osc.gain;
+    volume => s.gain;
 
-    env.keyOn();
+    getEnv().keyOn();
     if (ornament == 0 ) // no ornament
-        base => Std.mtof => osc.freq;
+        setFreq(base);
     else if (ornament == 1 ){ //
-        base -1  => Std.mtof => osc.freq;
+        setFreq(base - 1);
         100::ms => now;
-        base => Std.mtof => osc.freq;
+        setFreq(base);
     }
     else if (ornament == 2) {
-        base   => Std.mtof => osc.freq;
+        setFreq(base);
         100::ms => now;
-        base + 2   => Std.mtof => osc.freq;
+        setFreq(base + 2);
         50::ms => now;
-        base  => Std.mtof => osc.freq;
+        setFreq(base);
         50::ms => now;
-        base -1  => Std.mtof => osc.freq;
+        setFreq(base - 1);
         50::ms => now;
-        base => Std.mtof => osc.freq;
+        setFreq(base);
     } else if (ornament ==3 ){
-        base => Std.mtof => osc.freq;
+        setFreq(base);
         100::ms => now;
-        base + 12  => Std.mtof => osc.freq;
+        setFreq(base + 12);
         100::ms => now;
-        base => Std.mtof => osc.freq;
+        setFreq(base);
         100::ms => now;
-        base + 12  => Std.mtof => osc.freq;
+        setFreq(base + 12);
         100::ms => now;
-        base => Std.mtof => osc.freq;
+        setFreq(base);
         100::ms => now;
-        
     }
 }
 
@@ -99,7 +115,7 @@ fun void play() {
 }
 
 fun void stop() {
-    env.keyOff();
+    getEnv().keyOff();
 }
 
 fun void getKeyboard() {
@@ -157,7 +173,16 @@ fun void getKeyboard() {
                 }
             }
 
-
+            if (msg.ascii == '1' && msg.isButtonDown()) {
+                0 => overdrive;
+                10.0 => oscb.gain;
+                0.0 => oscs.gain;
+            }
+            if (msg.ascii == '2' && msg.isButtonDown()) {
+                1 => overdrive;
+                0.0 => oscb.gain;
+                0.4 => oscs.gain;
+            }
         }
     }
 }
@@ -167,7 +192,7 @@ fun void runBar() {
         for (int i; i < 8; ++i) {
             i => currentBar;
             2::second => now;
-            //stop();
+            stop();
         }
     }
 }
@@ -197,13 +222,20 @@ fun void recvOrk() {
 <<<"", "">>>;
 <<<"", "">>>;
 <<<"", "">>>;
+<<<"", "">>>;
 fun void print() {
-    "\033[5D\033[5A" => string ctrl;
+    "\033[5D\033[6A" => string ctrl;
 
     if (network == 0) {
         <<<ctrl, " -   +  Network:  OFF", "">>>;
     } else {
         <<<ctrl, " -   +  Network:  ON", "">>>;
+    }
+
+    if (overdrive == 0) {
+        <<<" [1] [2] OD:       OFF", "">>>;
+    } else {
+        <<<" [1] [2] OD:       ON", "">>>;
     }
 
     <<<" [Q] [W] Ornament:", ornament>>>;
