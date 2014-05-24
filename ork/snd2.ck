@@ -1,16 +1,50 @@
-SawOsc osc1 => BPF bpf1 => Gain s;
-SawOsc osc2 => BPF bpf2 => s;
-SawOsc osc3 => BPF bpf3 => s;
-SawOsc osc4 => BPF bpf4 => s;
+// Courtesy of http://electro-music.com/forum/topic-19287.html&postorder=asc
+class Overdrive
+{
+   // this overdrive UGen applies f(x) = x^3 / (1 + abs(x^3)) waveshaping function
+   // to the "in"put signal and output to "out".
+
+   Gain in; Gain out; // chuck or unchuck this to the outside world to connect;
+
+   // prepare input ^ 3
+   in => Gain CubeOfInput;
+   in => Gain inDummy1 => CubeOfInput;
+   in => Gain inDummy2 => CubeOfInput;
+   3 => CubeOfInput.op;
+
+   // prepare abs(input ^ 3)
+   CubeOfInput => FullRect Abs;
+
+   // prepare 1 + abs(input ^ 3) .. to be used as the "divisor"
+   Step one => Gain divisor;
+   1.0 => one.next;
+   Abs => divisor;
+
+   // calculate input^3 / (1 + abs(input ^ 3)) and send to "out"
+   CubeOfInput => out;
+   divisor => out;
+   4 => out.op; // <-- make out do a division of the inputs
+}
+
+SawOsc osc1 => BPF bpf1 => Gain oscs;
+SawOsc osc2 => BPF bpf2 => oscs;
+SawOsc osc3 => BPF bpf3 => oscs;
+SawOsc osc4 => BPF bpf4 => oscs;
 
 [osc1,osc2,osc3,osc4] @=> SawOsc oscS[];
 [bpf1,bpf2,bpf3,bpf4] @=> BPF bpfS[];
 
-s => JCRev rev => Delay d => Envelope env => dac;
+oscs => JCRev rev => Delay d => Envelope envs => dac;
 d => Gain fbk => d;
 
+Overdrive od;
+TriOsc tris => od.in;
+od.out => Envelope envt => dac;
+
+0 => tris.gain;
+
 .2 => rev.gain;
-0.5 => s.gain;
+0.5 => oscs.gain;
 15::ms => d.delay;
 0.75 => fbk.gain;
 
@@ -21,24 +55,8 @@ for (int i; i < gains.cap(); ++i) {
     0.5 => bpfS[i].Q;
 }
 
-.5::second => env.duration;
-/*
-fun void setTone(int base) {
-    env.keyOff();
-    base => Std.mtof => bpf.freq;
+//.5::second => env.duration;
 
-    base => Std.mtof => osc1.freq;
-    base + 4 => Std.mtof => osc2.freq;
-    base + 7 => Std.mtof => osc2.freq;
-    base + 11 => Std.mtof => osc4.freq;
-    env.keyOn();
-}
-
-[[0, 4, 7],
-[0, 4, 9],
-[0, 5, 9],
-[2, 7]] @=> int chords[][];
-*/
 [[[0, 4, 7,12],
 [-3, 0, 4, 9],
 [-7, -3, 0, 5],
@@ -78,23 +96,37 @@ fun void setTone(int base) {
 ] @=> int chords[][][];
 
 int currentBar;
-0 => float volume;
+0.5 => float volume;
 0 => int chordno;
 1 => int thickness ; // level: 1 - 4
+0 => int overdrive;
+
+fun Envelope getEnv() {
+    if (overdrive == 0) {
+        return envs;
+    } else {
+        return envt;
+    }
+}
 
 fun void setTone() {
-    env.keyOff();
+    getEnv().keyOff();
 
-    for (int i; i < gains.cap(); ++i) {
-        0.0 => oscS[i].freq;
-        0.0 => oscS[i].gain;
-    }
+    if (overdrive == 0) {
+        for (int i; i < gains.cap(); ++i) {
+            0.0 => oscS[i].freq;
+            0.0 => oscS[i].gain;
+        }
 
-    for (int i ; i < thickness; i++){
-        chords[chordno][currentBar][i] + 48 => int note;
-        note => Std.mtof => oscS[i].freq;
-        note => Std.mtof => bpfS[i].freq;
-        gains[i] * volume => oscS[i].gain;
+        for (int i ; i < thickness; i++){
+            chords[chordno][currentBar][i] + 48 => int note;
+            note => Std.mtof => oscS[i].freq;
+            note => Std.mtof => bpfS[i].freq;
+            gains[i] * volume => oscS[i].gain;
+        }
+    } else {
+        chords[chordno][currentBar][0] + 48 => int note;
+        note => Std.mtof => tris.freq;
     }
 
 
@@ -103,7 +135,7 @@ fun void setTone() {
     //chords[currentBar][2] + 48 => Std.mtof => osc3.freq;
     //chords[currentBar][0] + 48 + 12 => Std.mtof => osc4.freq;
 
-    env.keyOn();
+    getEnv().keyOn();
 }
 fun void play() {
     //Math.random2(0, chords[currentBar].cap() - 1) => int pick;
@@ -112,7 +144,7 @@ fun void play() {
 }
 
 fun void stop() {
-    env.keyOff();
+    getEnv().keyOff();
 }
 
 fun void getKeyboard() {
@@ -170,7 +202,16 @@ fun void getKeyboard() {
                     }
                 }
             }
-
+            if (msg.ascii == '1' && msg.isButtonDown()) {
+                0 => overdrive;
+                1.0 => oscs.gain;
+                0.0 => tris.gain;
+            }
+            if (msg.ascii == '2' && msg.isButtonDown()) {
+                1 => overdrive;
+                0.0 => oscs.gain;
+                0.6 => tris.gain;
+            }
         }
     }
 }
@@ -201,6 +242,7 @@ fun void recvOrk() {
 
         while (oe.nextMsg() != 0) {
             oe.getInt() => currentBar;
+            stop();
         }
     }
 }
@@ -210,13 +252,20 @@ fun void recvOrk() {
 <<<"", "">>>;
 <<<"", "">>>;
 <<<"", "">>>;
+<<<"", "">>>;
 fun void print() {
-    "\033[5D\033[5A" => string ctrl;
+    "\033[5D\033[6A" => string ctrl;
 
     if (network == 0) {
         <<<ctrl, " -   +  Network:   OFF", "">>>;
     } else {
         <<<ctrl, " -   +  Network:   ON", "">>>;
+    }
+
+    if (overdrive == 0) {
+        <<<" [1] [2] OD:        OFF", "">>>;
+    } else {
+        <<<" [1] [2] OD:        ON", "">>>;
     }
 
     <<<" [Q] [W] Thickness:", thickness>>>;
