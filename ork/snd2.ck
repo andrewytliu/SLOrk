@@ -1,29 +1,145 @@
-// Courtesy of http://electro-music.com/forum/topic-19287.html&postorder=asc
-class Overdrive
+class Interpolate
 {
-   // this overdrive UGen applies f(x) = x^3 / (1 + abs(x^3)) waveshaping function
-   // to the "in"put signal and output to "out".
+    // todo:  add static methods for other interpolations
 
-   Gain in; Gain out; // chuck or unchuck this to the outside world to connect;
+    fun static float linear(float value, float sourceMin, float sourceMax, float targetMin, float targetMax)
+    {
+        return targetMin + (targetMax - targetMin) * ((value - sourceMin) / (sourceMax - sourceMin));
+    }
+}
 
-   // prepare input ^ 3
-   in => Gain CubeOfInput;
-   in => Gain inDummy1 => CubeOfInput;
-   in => Gain inDummy2 => CubeOfInput;
-   3 => CubeOfInput.op;
+class Effect extends Chubgraph
+{
+    Gain dry;
+    Gain wet;
 
-   // prepare abs(input ^ 3)
-   CubeOfInput => FullRect Abs;
+    0.0 => float _dryGain;
+    1.0 => float _wetGain;
 
-   // prepare 1 + abs(input ^ 3) .. to be used as the "divisor"
-   Step one => Gain divisor;
-   1.0 => one.next;
-   Abs => divisor;
+    _dryGain => dry.gain;
+    _wetGain => wet.gain;
 
-   // calculate input^3 / (1 + abs(input ^ 3)) and send to "out"
-   CubeOfInput => out;
-   divisor => out;
-   4 => out.op; // <-- make out do a division of the inputs
+    // chuck inlet to effect to wet
+    wet => outlet;
+    inlet => dry => outlet;
+
+    // running by default
+    true => int _running;
+
+    fun float mix(float f)
+    {
+        f => _wetGain;
+        1.0 - f => _dryGain;
+
+        _wetGain => wet.gain;
+        _dryGain => dry.gain;
+        return _wetGain;
+    }
+
+    fun float mix()
+    {
+        return _wetGain;
+    }
+
+    fun void start()
+    {
+        if (!_running)
+        {
+            _dryGain => dry.gain;
+            _wetGain => wet.gain;
+            true => _running;
+        }
+    }
+
+    fun void stop()
+    {
+        if (_running)
+        {
+            1.0 => dry.gain;
+            0.0 => wet.gain;
+            false => _running;
+        }
+    }
+
+    fun void toggle()
+    {
+        if (_running)
+        {
+            stop();
+        }
+        else
+        {
+            start();
+        }
+    }
+
+    fun int running()
+    {
+        return _running;
+    }
+}
+
+class Tremolo extends Effect
+{
+    Gain tremolo;
+    SinOsc sinLfo;
+    SqrOsc sqrLfo;
+    TriOsc triLfo;
+    0.33 => float sinMix;
+    0.33 => float sqrMix;
+    0.33 => float triMix;
+    1.0 => float _rate;
+    1.0 => float _depth;
+
+    {
+        inlet => tremolo => wet;
+        sinLfo => blackhole;
+        sqrLfo => blackhole;
+        triLfo => blackhole;
+
+        rate(_rate);
+        depth(_depth);
+
+        spork ~ _tickAtSampleRate();
+    }
+
+    fun float rate()
+    {
+        return _rate;
+    }
+
+    fun float rate(float rate)
+    {
+        rate => _rate;
+        _rate => sinLfo.freq;
+        _rate => sqrLfo.freq;
+        _rate => triLfo.freq;
+        return _rate;
+    }
+
+    fun float depth()
+    {
+        return _depth;
+    }
+
+    fun float depth(float depth)
+    {
+        depth => _depth;
+        _depth * sinMix => sinLfo.gain;
+        _depth * sqrMix => sqrLfo.gain;
+        _depth * triMix => triLfo.gain;
+        return _depth;
+    }
+
+    fun void _tickAtSampleRate()
+    {
+        while (true)
+        {
+            1::samp => now;
+            sinLfo.last() * sinMix + sqrLfo.last() * sqrMix + triLfo.last() * triMix => float last;
+            Interpolate.linear(last, -1.0, 1.0, 0.0, 1.0) => tremolo.gain;
+        }
+    }
 }
 
 SawOsc osc1 => BPF bpf1 => Gain oscs;
@@ -37,11 +153,25 @@ SawOsc osc4 => BPF bpf4 => oscs;
 oscs => JCRev rev => Delay d => Envelope envs => dac;
 d => Gain fbk => d;
 
-Overdrive od;
+/* Overdrive od;
 TriOsc tris => od.in;
-od.out => Envelope envt => dac;
+od.out => Gain ofbk => Echo e1 => Echo e2 => Echo e3 => Echo e4 => Echo e5 => Delay odelay => Envelope envt => dac;
+25::ms => odelay.delay;
+odelay => ofbk;
+0.75 => ofbk.gain;
 
-0 => tris.gain;
+0 => tris.gain; */
+
+SawOsc bee1 => Gain tris;
+SawOsc bee2 => tris;
+tris => LPF tplf => Tremolo tremolo => ADSR envt => dac;
+
+envt.set(10::ms, 8::ms, 0.8, 60::ms);
+//bee1.noteOn(1.0);
+//bee2.noteOn(1.0);
+5.0 => tremolo.rate;
+8.0 => tremolo.depth;
+
 
 .2 => rev.gain;
 0.5 => oscs.gain;
@@ -96,7 +226,7 @@ for (int i; i < gains.cap(); ++i) {
 ] @=> int chords[][][];
 
 int currentBar;
-0.5 => float volume;
+2.0 => float volume;
 0 => int chordno;
 1 => int thickness ; // level: 1 - 4
 0 => int overdrive;
@@ -125,8 +255,13 @@ fun void setTone() {
             gains[i] * volume => oscS[i].gain;
         }
     } else {
-        chords[chordno][currentBar][0] + 48 => int note;
-        note => Std.mtof => tris.freq;
+        0.0 => tris.gain;
+        chords[chordno][currentBar][0] + 48 => int note1;
+        note1 => Std.mtof => bee1.freq;
+        chords[chordno][currentBar][1] + 24 => int note2;
+        note2 => Std.mtof => bee2.freq;
+        note1 + 24 => Std.mtof => tplf.freq;
+        0.6 => tris.gain;
     }
 
 
@@ -210,7 +345,7 @@ fun void getKeyboard() {
             if (msg.ascii == '2' && msg.isButtonDown()) {
                 1 => overdrive;
                 0.0 => oscs.gain;
-                0.6 => tris.gain;
+                2.0 => tris.gain;
             }
         }
     }
