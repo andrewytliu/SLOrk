@@ -203,7 +203,7 @@ fun void recvOrk() {
     OscRecv recv;
     6449 => recv.port;
     recv.listen();
-    recv.event("group", "i") @=> OscEvent oe;
+    recv.event("beat", "i") @=> OscEvent oe;
 
     while (true) {
         oe => now;
@@ -212,7 +212,11 @@ fun void recvOrk() {
         }
 
         while (oe.nextMsg() != 0) {
-            oe.getInt() => currentBar;
+            oe.getInt() => int rbeat;
+            rbeat / 8 => currentBar;
+            if (rbeat % 8 == 0) {
+                stop();
+            }
         }
     }
 }

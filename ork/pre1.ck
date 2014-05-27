@@ -172,27 +172,9 @@ fun void runBar() {
 
 0 => int network;
 
-fun void recvOrkG() {
+fun void recvOrk() {
     OscRecv recv;
     6449 => recv.port;
-    recv.listen();
-    recv.event("group", "i") @=> OscEvent oe;
-
-    while (true) {
-        oe => now;
-        if (network == 0) {
-            1 => network;
-        }
-
-        while (oe.nextMsg() != 0) {
-            oe.getInt() => currentBar;
-        }
-    }
-}
-
-fun void recvOrkB() {
-    OscRecv recv;
-    6450 => recv.port;
     recv.listen();
     recv.event("beat", "i") @=> OscEvent oe;
 
@@ -203,7 +185,9 @@ fun void recvOrkB() {
         }
 
         while (oe.nextMsg() != 0) {
-            oe.getInt() => currentBeat;
+            oe.getInt() => int rbeat;
+            rbeat % 8 => currentBeat;
+            rbeat / 8 => currentBar;
             play(currentBeat);
         }
     }
@@ -258,8 +242,7 @@ if (me.args() > 1) {
 
 if (me.args() > 0) {
     spork ~ reportSelf(me.arg(0), myself);
-    spork ~ recvOrkG();
-    spork ~ recvOrkB();
+    spork ~ recvOrk();
 } else {
     spork ~ runBar();
 }

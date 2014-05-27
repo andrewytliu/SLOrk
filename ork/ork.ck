@@ -4,30 +4,20 @@
 
 string hostnames[maxClient];
 OscSend xmit[maxClient];
-OscSend ymit[maxClient];
 6449 => int port;
 
 250::ms => dur beat;
-8 => int barPerGroup;
-8 => int beatPerBar;
+64 => int beatPerGroup;
 
 fun void loop() {
     while( true ) {
-
-        for (int i; i < barPerGroup; ++i) {
+        for (int i; i < beatPerGroup; ++i) {
             // sending group
             for (int j; j < clients; ++j) {
-                xmit[j].startMsg("group", "i");
+                xmit[j].startMsg("beat", "i");
                 i => xmit[j].addInt;
             }
-
-            for (int j; j < beatPerBar; ++j) {
-                for (int k; k < clients; ++k) {
-                    ymit[k].startMsg("beat", "i");
-                    j => ymit[k].addInt;
-                }
-                beat => now;
-            }
+            beat => now;
         }
     }
 }
@@ -35,7 +25,6 @@ fun void loop() {
 fun void setupClient(string name) {
     name => hostnames[clients];
     xmit[clients].setHost(name, port);
-    ymit[clients].setHost(name, port + 1);
     clients++;
 }
 
