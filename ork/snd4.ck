@@ -341,10 +341,10 @@ fun void runBar() {
             }
             else if (density == 5) {
                     getEnv().keyOn();
-                    chords[chordno][currentBar][i] + Math.random2(0,1)*12 + 72 => int note; 
+                    chords[chordno][currentBar][0] + Math.random2(0,1)*12 + 72 => int note; 
                     note  => Std.mtof => s.freq;
                     500::ms => now;
-                    for (int i; i<2;i++){
+                    for ( 1=> int i; i<3;i++){
                         chords[chordno][currentBar][i] + Math.random2(0,1)*12 + 72 =>  note; 
                         note  => Std.mtof => s.freq;
                         250::ms => now;
