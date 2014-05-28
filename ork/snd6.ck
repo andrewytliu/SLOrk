@@ -253,9 +253,9 @@ fun void print() {
     "\033[5D\033[5A" => string ctrl;
 
     if (network == 0) {
-        <<<ctrl, " -   +  Network:   OFF", "">>>;
+        <<<ctrl, " -   +     V1    V2    V3     Network:  OFF", "">>>;
     } else {
-        <<<ctrl, " -   +  Network:   ON", "">>>;
+        <<<ctrl, " -   +     V1    V2    V3     Network:  ON", "">>>;
     }
     //<<<" [1] [2] Density:  ", density>>>;
     //<<<" [Q] [W] Thickness:", thickness>>>;
