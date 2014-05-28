@@ -1,22 +1,18 @@
-Blit oscb => LPF lpf => Envelope envb => JCRev rev => Gain s => dac;
-SawOsc oscs => Envelope envs => s;
+Blit osc => LPF lpf => Envelope env => JCRev rev => dac;
 
 
-0.0 => s.gain;
+0.0 => osc.gain;
 0.1 => lpf.Q;
 
-10.0 => oscb.gain;
-0.0 => oscs.gain;
-10 => oscb.harmonics;
-0 => int overdrive;
-[4,2,1] @=> int lasts[];
-
-0 => int density;
+10.0 => osc.gain;
+0.0 => osc.gain;
+10 => osc.harmonics;
 
 [8, 7, 5, 3] @=> int comp[];
 
+[
 
-[[[0, 4, 7, 12, 16, 19],
+[[0, 4, 7, 12, 16, 19],
  [0, 4, 9, 12 ,16, 21],
  [0, 5, 9, 12 ,17, 21],
  [2, 7, 11, 14, 19, 23],
@@ -54,188 +50,113 @@ SawOsc oscs => Envelope envs => s;
 
  ] @=> int chords[][][];
 
-int currentBar;
+0 => int currentBar;
+0 => int currentBeat;
 0.0 => float volume;
-0 => int ornament; //0:: no ornament, 1: appoggiatura, 2: turu
+0 => int ornament; // 0: no ornament, 1: appoggiatura, 2: turu
 0 => int chordno;
-
-fun void setFreq(int freq) {
-    freq => Std.mtof => oscb.freq;
-    freq => Std.mtof => oscs.freq;
-}
-
-fun Envelope getEnv() {
-    if (overdrive == 0) {
-        return envb;
-    } else {
-        return envs;
-    }
-}
+0 => int density;
 
 fun void setTone(int base) {
-    getEnv().keyOff();
+    env.keyOff();
 
     base + 5 => Std.mtof => lpf.freq;
-    volume => s.gain;
+    volume => osc.gain;
 
-    getEnv().keyOn();
-    if (ornament == 0 ) // no ornament
-        setFreq(base);
-    else if (ornament == 1 ){ //
-        setFreq(base - 1);
+    if (ornament == 0) {
+        base => Std.mtof => osc.freq;
+    } else if (ornament == 1) {
+        base - 1 => osc.freq;
         100::ms => now;
-        setFreq(base);
-    }
-    else if (ornament == 2) {
-        setFreq(base);
+        base => Std.mtof => osc.freq;
+    } else if (ornament == 2) {
+        base => Std.mtof => osc.freq;
         100::ms => now;
-        setFreq(base + 2);
+        base + 2 => Std.mtof => osc.freq;
         50::ms => now;
-        setFreq(base);
+        base => Std.mtof => osc.freq;
         50::ms => now;
-        setFreq(base - 1);
+        base - 1 => Std.mtof => osc.freq;
         50::ms => now;
-        setFreq(base);
-    } else if (ornament ==3 ){
-        setFreq(base);
+        base => Std.mtof => osc.freq;
+    } else if (ornament == 3){
+        base => Std.mtof => osc.freq;
         100::ms => now;
-        setFreq(base + 12);
+        base + 12 => Std.mtof => osc.freq;
         100::ms => now;
-        setFreq(base);
+        base => Std.mtof => osc.freq;
         100::ms => now;
-        setFreq(base + 12);
+        base + 12 => Std.mtof => osc.freq;
         100::ms => now;
-        setFreq(base);
+        base => Std.mtof => osc.freq;
         100::ms => now;
     }
+    env.keyOn();
 }
 
 
 fun void play() {
     Math.random2(0, chords[chordno][currentBar].cap() - 1) => int pick;
-    chords[chordno][currentBar][pick] => int note;
-    setTone(60 + note);
+    chords[chordno][currentBar][pick] + Math.random2(0,1)*12 + 48 => int note;
+    setTone(note);
 }
 
 fun void stop() {
-    getEnv().keyOff();
+    env.keyOff();
 }
 
 fun void getKeyboard() {
-    Hid hi;
-    HidMsg msg;
-
-    0 => int device;
-    if (!hi.openKeyboard(device)) me.exit();
+    KBHit kb;
 
     while (true) {
-        hi => now;
+        kb => now;
 
-        while (hi.recv(msg)) {
-            /*
-            if (msg.ascii == 32) { // space
-                if (msg.isButtonDown()) {
-                    play();
-                } else {
-                    stop();
-                }
-            }
-            */
+        while (kb.more()) {
+            kb.getchar() => int c;
 
-            if (msg.ascii ==81){ //Q
-                if (msg.isButtonDown()){
-                    if(density-1 >= 0)
-                        0 -=> density;
-                }
-            } else if (msg.ascii == 87){ //W
-                if (msg.isButtonDown()){
-                    if(density+1 <= 4 )
-                        1 +=> density;
-                }
-            } 
-            else if (msg.ascii == 90) { // Z
-                if (msg.isButtonDown()){
-                    if(volume - 0.05 >=0) {
-                        0.05 -=> volume;
-                    }
-                }
-
-            } else if (msg.ascii == 88)  {//X
-                if (msg.isButtonDown()){
-                    0.05 +=> volume;
-                }
-            } else if (msg.ascii == 65) { // A
-                if (msg.isButtonDown()){
-                    if( chordno - 1 >=0) {
-                        1 -=> chordno;
-                    }
-                }
-
-            } else if (msg.ascii == 83)  {//S
-                if (msg.isButtonDown()){
-                    if(chordno + 1 <=3) {
-                        1 +=> chordno;
-                    }
-                }
-            }
-
-            if (msg.ascii == '1' && msg.isButtonDown()) {
-                0 => overdrive;
-                10.0 => oscb.gain;
-                0.0 => oscs.gain;
-            }
-            if (msg.ascii == '2' && msg.isButtonDown()) {
-                1 => overdrive;
-                0.0 => oscb.gain;
-                0.4 => oscs.gain;
-            }
+            if (c == '1') if (ornament - 1 >= 0) 1 -=> ornament;
+            if (c == '2') if (ornament + 1 <= 3) 1 +=> ornament;
+            if (c == 'q') if (density - 1 >= 0) 1 -=> density;
+            if (c == 'w') if (density + 1 <= 4) 1 +=> density;
+            if (c == 'z') if (volume - 0.05 >= 0) 0.05 -=> volume;
+            if (c == 'x') 0.05 +=> volume;
+            if (c == 'a') if (chordno - 1 >= 0) 1 -=> chordno;
+            if (c == 's') if (chordno + 1 <= chords.cap()) 1 +=> chordno;
         }
     }
 }
 
-fun void runBar() {
-    while (true) {
-        for (int i; i < 8; ++i) {
-            i => currentBar;
-            //2::second => now;
-            //stop();
-            4 => int q;
-            2::second => dur total;
-            while(q > 0 ) {
-                Math.random2(0,3) => int pick;
-                chords[chordno][currentBar][pick] + Math.random2(0,1)*12 + 48 => int note;
-                note  => Std.mtof => oscb.freq;
-                //note => Std.mtof => bpfS[0].freq;
-                volume => s.gain;
-                note + 5 => Std.mtof => lpf.freq;
-                volume => s.gain;
-    
-                getEnv().keyOn();
-                int l;
-                if (density == 0) {0 => l;}
-                else if (density ==1) {Math.random2(0,1)=> l;}
-                else if (density ==2) {Math.random2(0,2)=> l;}
-                else if (density ==3 ) {Math.random2(1,2)=> l;}
-                else if (density ==4 ) {Math.random2(2,2)=> l;}
+[4, 2, 1] @=> int lasts[];
+0 => int last;
 
+fun void playBar() {
+    if (currentBeat == 0) 0 => last;
 
-                int last;
-                if (lasts[l] >q)  q => last;
-                else lasts[l] => last;
-                last -=> q;
-                
-                last*500::ms => now; 
-                getEnv().keyOff();
-
-                //last -=> total;
-            }
-
-
-        }
+    if (last == 0) {
+        int ppick;
+        if (density == 0) 0 => ppick;
+        if (density == 1) Math.random2(0, 1) => ppick;
+        if (density == 2) Math.random2(0, 2) => ppick;
+        if (density == 3) Math.random2(1, 2) => ppick;
+        if (density == 4) Math.random2(2, 2) => ppick;
+        play();
+        lasts[ppick] => last;
     }
+    1 -=> last;
 }
 
 0 => int network;
+
+fun void runBar() {
+    while (true) {
+        for (int i; i < 64; ++i) {
+            i / 8 => currentBar;
+            i % 8 => currentBeat;
+            playBar();
+            250::ms => now;
+        }
+    }
+}
 
 fun void recvOrk() {
     OscRecv recv;
@@ -252,9 +173,8 @@ fun void recvOrk() {
         while (oe.nextMsg() != 0) {
             oe.getInt() => int rbeat;
             rbeat / 8 => currentBar;
-            if (rbeat % 8 == 0) {
-                stop();
-            }
+            rbeat % 8 => currentBeat;
+            playBar();
         }
     }
 }
@@ -273,14 +193,8 @@ fun void print() {
     } else {
         <<<ctrl, " -   +  Network:  ON", "">>>;
     }
-
-    if (overdrive == 0) {
-        <<<" [1] [2] OD:       OFF", "">>>;
-    } else {
-        <<<" [1] [2] OD:       ON", "">>>;
-    }
-
-    <<<" [Q] [W] Density:", density>>>;
+    <<<" [1] [2] Ornament:", ornament>>>;
+    <<<" [Q] [W] Density: ", density>>>;
     <<<" [A] [S] ChordNo: ", chordno>>>;
     <<<" [Z] [X] Volume:  ", volume>>>;
     <<<" [", currentBar ,"]">>>;
