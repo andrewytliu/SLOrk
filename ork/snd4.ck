@@ -103,7 +103,7 @@ fun void play(int pick) {
         scales[index][Math.random2(0,6)] + Math.random2(0,1)*12 + 72 => note;
     }
     note => Std.mtof => osc.freq;
-    volume => osc.gain;
+    volume*0.1 => osc.gain;
     env.keyOn();
 }
 
@@ -197,7 +197,7 @@ fun void endDestruct() {
 
 fun void recvOrk() {
     OscRecv recv;
-    6449 => recv.port;
+    1234 => recv.port;
     recv.listen();
     recv.event("beat", "i") @=> OscEvent oe;
 
@@ -238,9 +238,9 @@ fun void print() {
         <<<ctrl, " -   +  Network:   ON", "">>>;
     }
 
-    <<<" [Q] [W] Density:  ", density>>>;
-    <<<" [A] [S] ChordNo:  ", chordno>>>;
-    <<<" [Z] [X] Volume:   ", volume>>>;
+    <<<" [Q] [W]    0-2   3-5   3-5    Density: ", density>>>;
+    <<<" [A] [S]    0-2   3-5   6-7    ChordNo: ", chordno>>>;
+    <<<" [Z] [X]                       Volume:  ", volume>>>;
     <<<" [", currentBar ,"]">>>;
 }
 

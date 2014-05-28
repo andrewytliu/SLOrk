@@ -125,7 +125,7 @@ fun void play() {
         chords[chordno][currentBar][i]  + 48 => int note;
         note => Std.mtof => oscS[i].freq;
         note => Std.mtof => bpfS[i].freq;
-        gains[i] * volume => oscS[i].gain;
+        gains[i] * volume *0.5 => oscS[i].gain;
     }
 
     env.keyOn();
@@ -145,7 +145,7 @@ fun void playSingle() {
     chords[chordno][currentBar][pick] + 48 + Math.random2(-1,0)*12 => int note;
     note => Std.mtof => oscS[pick].freq;
     note => Std.mtof => bpfS[pick].freq;
-    gains[0] * volume => oscS[pick].gain;
+    gains[0] * volume*0.8=> oscS[pick].gain;
 
     env.keyOn();
 }
@@ -217,7 +217,7 @@ fun void runBar() {
 
 fun void recvOrk() {
     OscRecv recv;
-    6449 => recv.port;
+    5678 => recv.port;
     recv.listen();
     recv.event("beat", "i") @=> OscEvent oe;
 
@@ -258,9 +258,10 @@ fun void print() {
         <<<ctrl, " -   +  Network:   ON", "">>>;
     }
     //<<<" [1] [2] Density:  ", density>>>;
-    <<<" [Q] [W] Thickness:", thickness>>>;
-    <<<" [A] [S] ChordNo:  ", chordno>>>;
-    <<<" [Z] [X] Volume:   ", volume>>>;
+    //<<<" [Q] [W] Thickness:", thickness>>>;
+    <<<" [Q] [W]    1-4   1-4   ---    Thickness: ", thickness>>>;
+    <<<" [A] [S]    0-2   3-5   6-7    ChordNo: ", chordno>>>;
+    <<<" [Z] [X]                       Volume:  ", volume>>>;
     <<<" [", currentBar ,"]">>>;
 }
 
