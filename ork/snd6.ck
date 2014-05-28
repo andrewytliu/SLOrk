@@ -172,14 +172,16 @@ fun void getKeyboard() {
                 if (chordno + 1 < chords.cap()) {
                     1 +=> chordno;
                     //for ending
+                    if (chordno ==3 || chordno ==5  ||chordno ==6 )
+                        2 => density;
                     if (chordno == chords.cap()-1 ||chordno == chords.cap()-2 ){
                         4=>thickness;
                         0=> density;
                     }
                 }
             }
-            if (c == '1') if (density - 1 >= 0) 1 -=> density;
-            if (c == '2') if (density + 1 <= 2) 1 +=> density;
+            //if (c == '1') if (density - 1 >= 0) 1 -=> density;
+            //if (c == '2') if (density + 1 <= 2) 1 +=> density;
         }
     }
 }
@@ -246,17 +248,16 @@ fun void recvOrk() {
 <<<"", "">>>;
 <<<"", "">>>;
 <<<"", "">>>;
-<<<"", "">>>;
 
 fun void print() {
-    "\033[5D\033[6A" => string ctrl;
+    "\033[5D\033[5A" => string ctrl;
 
     if (network == 0) {
         <<<ctrl, " -   +  Network:   OFF", "">>>;
     } else {
         <<<ctrl, " -   +  Network:   ON", "">>>;
     }
-    <<<" [1] [2] Density:  ", density>>>;
+    //<<<" [1] [2] Density:  ", density>>>;
     <<<" [Q] [W] Thickness:", thickness>>>;
     <<<" [A] [S] ChordNo:  ", chordno>>>;
     <<<" [Z] [X] Volume:   ", volume>>>;
