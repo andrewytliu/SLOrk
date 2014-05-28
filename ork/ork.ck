@@ -9,14 +9,17 @@ OscSend xmit[maxClient];
 250::ms => dur beat;
 64 => int beatPerGroup;
 
+fun void sendGroup(int msg) {
+    for (int j; j < clients; ++j) {
+        xmit[j].startMsg("beat", "i");
+        msg => xmit[j].addInt;
+    }
+}
+
 fun void loop() {
     while( true ) {
         for (int i; i < beatPerGroup; ++i) {
-            // sending group
-            for (int j; j < clients; ++j) {
-                xmit[j].startMsg("beat", "i");
-                i => xmit[j].addInt;
-            }
+            sendGroup(i);
             beat => now;
         }
     }
@@ -62,7 +65,33 @@ fun void recvReport()
     }
 }
 
-// setupClient("localhost", 8080);
+fun void getKeyboard() {
+    KBHit kb;
+
+    while (true) {
+        kb => now;
+
+        while (kb.more()) {
+            kb.getchar() => int c;
+
+            if (c == 'z') {
+                sendGroup(-1);
+                <<<"Destruction start", "">>>;
+            }
+
+            if (c == 'x') {
+                sendGroup(-2);
+                <<<"END", "">>>;
+            }
+        }
+    }
+}
+
+//setupClient("hfwu.local", 1234);
+//setupClient("hfwu.local", 5678);
+//setupClient("eggegg-air.local", 1234);
+//setupClient("eggegg-air.local", 5678);
 spork ~ loop();
 spork ~ recvReport();
+spork ~ getKeyboard();
 while(true) { 1::second => now; }

@@ -225,9 +225,14 @@ fun void recvOrk() {
 
         while (oe.nextMsg() != 0) {
             oe.getInt() => int rbeat;
-            rbeat / 8 => currentBar;
-            rbeat % 8 => currentBeat;
-            playBar();
+
+            if (rbeat >= 0) {
+                rbeat / 8 => currentBar;
+                rbeat % 8 => currentBeat;
+                playBar();
+            } else {
+                if (rbeat == -2) 0/0;
+            }
         }
     }
 }

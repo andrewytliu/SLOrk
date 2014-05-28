@@ -206,6 +206,23 @@ fun void runBar() {
     }
 }
 
+fun void endDestruct() {
+    Noise n => BiQuad f => Gain g => dac;
+    .99 => f.prad;
+    .05 => f.gain;
+    1 => f.eqzs;
+    0.0 => float t;
+    0 => float gain;
+
+    while( true ) {
+        100.0 + Std.fabs(Math.sin(t)) * 15000.0 => f.pfreq;
+        t + .01 => t;
+        5::ms => now;
+        0.0001 +=> gain;
+        gain => g.gain;
+    }
+}
+
 fun void recvOrk() {
     OscRecv recv;
     6449 => recv.port;
@@ -220,9 +237,15 @@ fun void recvOrk() {
 
         while (oe.nextMsg() != 0) {
             oe.getInt() => int rbeat;
-            rbeat / 8 => currentBar;
-            rbeat % 8 => currentBeat;
-            playBar();
+
+            if (rbeat >= 0) {
+                rbeat / 8 => currentBar;
+                rbeat % 8 => currentBeat;
+                playBar();
+            } else {
+                if (rbeat == -1) spork ~ endDestruct();
+                if (rbeat == -2) 0/0;
+            }
         }
     }
 }
