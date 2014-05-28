@@ -113,7 +113,7 @@ fun void getKeyboard() {
             kb.getchar() => int c;
 
             if (c == 'q') if (density - 1 >= 0) 1 -=> density;
-            if (c == 'w') if (density + 1 <= 6) 1 +=> density;
+            if (c == 'w') if (density + 1 <= 5) 1 +=> density;
             if (c == 'z') if (volume - 0.05 >= 0) 0.05 -=> volume;
             if (c == 'x') 0.05 +=> volume;
             if (c == 'a') if (chordno - 1 >= 0) 1 -=> chordno;
@@ -146,21 +146,13 @@ fun void playBar() {
         play(0);
     } else if (density == 2 && lastPick == 1 && currentBeat % 8 == 6) {
         play(1);
-    } else if (density == 3 && currentBeat % 8 == 0) {
-        play(0);
-    } else if (density == 3 && currentBeat % 8 == 2) {
-        166::ms => now;
-        play(1);
-    } else if (density == 3 && currentBeat % 8 == 5) {
-        83::ms => now;
-        play(2);
-    } else if (density == 4 && currentBeat % 2 == 0) {
+    }  else if (density == 3 && currentBeat % 2 == 0) {
         play(pick);
-    } else if (density == 5 && currentBeat % 8 == 0) {
+    } else if (density == 4 && currentBeat % 8 == 0) {
         play(0);
-    } else if (density == 5 && currentBeat % 8 > 1) {
+    } else if (density == 4 && currentBeat % 8 > 1) {
         play(currentBeat % 4);
-    } else if (density == 6) {
+    } else if (density == 5) {
         play(currentBeat % 4);
     }
 }
