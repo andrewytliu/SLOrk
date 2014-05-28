@@ -113,7 +113,7 @@ for (int i; i < choose.cap(); ++i) {
 fun void play(int i) {
     choose[i] => int pick;
 
-    vol => g.gain;
+    vol / 15 => g.gain;
     if (pick == 3) {
         Math.random2(0, chords[chordno][currentBar].cap() - 1) => int cpick;
         chords[chordno][currentBar][cpick] => int note;
