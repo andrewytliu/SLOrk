@@ -2,13 +2,16 @@ Blit oscb => LPF lpf => Envelope envb => JCRev rev => Gain s => dac;
 SawOsc oscs => Envelope envs => s;
 
 
-0.5 => s.gain;
+0.0 => s.gain;
 0.1 => lpf.Q;
 
 10.0 => oscb.gain;
 0.0 => oscs.gain;
 10 => oscb.harmonics;
 0 => int overdrive;
+[4,2,1] @=> int lasts[];
+
+0 => int density;
 
 [8, 7, 5, 3] @=> int comp[];
 
@@ -52,7 +55,7 @@ SawOsc oscs => Envelope envs => s;
  ] @=> int chords[][][];
 
 int currentBar;
-0.5 => float volume;
+0.0 => float volume;
 0 => int ornament; //0:: no ornament, 1: appoggiatura, 2: turu
 0 => int chordno;
 
@@ -129,6 +132,7 @@ fun void getKeyboard() {
         hi => now;
 
         while (hi.recv(msg)) {
+            /*
             if (msg.ascii == 32) { // space
                 if (msg.isButtonDown()) {
                     play();
@@ -136,18 +140,20 @@ fun void getKeyboard() {
                     stop();
                 }
             }
+            */
 
             if (msg.ascii ==81){ //Q
                 if (msg.isButtonDown()){
-                    if(ornament-1 >= 0)
-                        1 -=> ornament;
+                    if(density-1 >= 0)
+                        0 -=> density;
                 }
             } else if (msg.ascii == 87){ //W
                 if (msg.isButtonDown()){
-                    if(ornament+1 <= 3 )
-                        1 +=> ornament;
+                    if(density+1 <= 4 )
+                        1 +=> density;
                 }
-            } else if (msg.ascii == 90) { // Z
+            } 
+            else if (msg.ascii == 90) { // Z
                 if (msg.isButtonDown()){
                     if(volume - 0.05 >=0) {
                         0.05 -=> volume;
@@ -191,8 +197,40 @@ fun void runBar() {
     while (true) {
         for (int i; i < 8; ++i) {
             i => currentBar;
-            2::second => now;
-            stop();
+            //2::second => now;
+            //stop();
+            4 => int q;
+            2::second => dur total;
+            while(q > 0 ) {
+                Math.random2(0,3) => int pick;
+                chords[chordno][currentBar][pick] + Math.random2(0,1)*12 + 48 => int note;
+                note  => Std.mtof => oscb.freq;
+                //note => Std.mtof => bpfS[0].freq;
+                volume => s.gain;
+                note + 5 => Std.mtof => lpf.freq;
+                volume => s.gain;
+    
+                getEnv().keyOn();
+                int l;
+                if (density == 0) {0 => l;}
+                else if (density ==1) {Math.random2(0,1)=> l;}
+                else if (density ==2) {Math.random2(0,2)=> l;}
+                else if (density ==3 ) {Math.random2(1,2)=> l;}
+                else if (density ==4 ) {Math.random2(2,2)=> l;}
+
+
+                int last;
+                if (lasts[l] >q)  q => last;
+                else lasts[l] => last;
+                last -=> q;
+                
+                last*500::ms => now; 
+                getEnv().keyOff();
+
+                //last -=> total;
+            }
+
+
         }
     }
 }
@@ -242,7 +280,7 @@ fun void print() {
         <<<" [1] [2] OD:       ON", "">>>;
     }
 
-    <<<" [Q] [W] Ornament:", ornament>>>;
+    <<<" [Q] [W] Density:", density>>>;
     <<<" [A] [S] ChordNo: ", chordno>>>;
     <<<" [Z] [X] Volume:  ", volume>>>;
     <<<" [", currentBar ,"]">>>;
