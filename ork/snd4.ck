@@ -2,6 +2,32 @@
 TriOsc osc => Envelope env => JCRev rev => dac;
 
 [
+[[0, 3, 7,12],
+[-4, 0, 3, 8],
+[-7, -4, 0, 5],
+[-5, -1, 2, 7],
+[0, 3, 7,12],
+[-4, 0, 3, 8],
+[-7, -4, 0, 5],
+[-5, -1, 2, 7]],
+
+[[0, 3, 7,12],
+[-4, 0, 3, 8],
+[-7, -4, 0, 5],
+[-5, -1, 2, 7],
+[-5, -2, 3, 7],
+[-4, 0, 3, 8],
+[-10, -7, -4, 2],
+[-5, -1, 2, 7]],
+
+[[0, 3, 7,12],
+[-2, 3, 7, 12],
+[-4, 0, 5, 12],
+[-5, 2, 5, 11],
+[-7, 0, 2, 8],
+[-9, 0, 7, 12],
+[-10,0, 5, 8],
+[-5, 2, 7,11]],
 
 [[0, 4, 7,12],
 [-3, 0, 4, 9],
@@ -41,15 +67,33 @@ TriOsc osc => Envelope env => JCRev rev => dac;
 
 ] @=> int chords[][][];
 
+[
+[0,2,3,5,7,8,11],
+[0,2,4,5,7,9,11]
+] @=> int scales[][];
+
 0 => int currentBar;
 0 => int currentBeat;
-0.5 => float volume;
+0.0 => float volume;
 0 => int chordno;
 0 => int density;
 
 fun void play(int pick) {
     env.keyOff();
-    chords[chordno][currentBar][pick] + Math.random2(0,1)*12 + 72 => int note;
+    //chords[chordno][currentBar][pick] + Math.random2(0,1)*12 + 72 => int note;
+    Math.random2f(0,1) => float f;
+    int note;
+    if (f>0.2) {
+        Math.random2(0, chords[chordno][currentBar].cap() - 1) => int pick;
+
+        chords[chordno][currentBar][pick] + Math.random2(0,1)*12 + 72 => note;
+    }
+    else {
+        int index ;
+        if(chordno < 3) 0=> index;
+        else 1=>index;
+        scales[index][Math.random2(0,6)] + Math.random2(0,1)*12 + 72 => note;
+    }
     note => Std.mtof => osc.freq;
     volume => osc.gain;
     env.keyOn();

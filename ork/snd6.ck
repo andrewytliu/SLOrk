@@ -133,7 +133,7 @@ fun void playSingle() {
         0 => pick;
     }
 
-    chords[chordno][currentBar][pick] + 48 + Math.random2(-1,1)*12 => int note;
+    chords[chordno][currentBar][pick] + 48 + Math.random2(-1,0)*12 => int note;
     note => Std.mtof => oscS[pick].freq;
     note => Std.mtof => bpfS[pick].freq;
     gains[0] * volume => oscS[pick].gain;
