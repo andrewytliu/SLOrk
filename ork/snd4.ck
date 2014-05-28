@@ -189,7 +189,7 @@ fun void endDestruct() {
         t + .01 => t;
         5::ms => now;
         0.0001 +=> gain;
-        gain => g.gain;
+        gain * volume => g.gain;
     }
 }
 
