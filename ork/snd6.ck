@@ -231,7 +231,11 @@ fun void recvOrk() {
                 rbeat % 8 => currentBeat;
                 playBar();
             } else {
-                if (rbeat == -2) 0/0;
+                if (rbeat == -2) {
+                    stop();
+                    2::second => now;
+                    0/0;
+                }
             }
         }
     }
