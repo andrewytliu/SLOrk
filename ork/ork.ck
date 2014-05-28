@@ -4,7 +4,7 @@
 
 string hostnames[maxClient];
 OscSend xmit[maxClient];
-6449 => int port;
+6449 => int outPort;
 
 250::ms => dur beat;
 64 => int beatPerGroup;
@@ -22,7 +22,7 @@ fun void loop() {
     }
 }
 
-fun void setupClient(string name) {
+fun void setupClient(string name, int port) {
     name => hostnames[clients];
     xmit[clients].setHost(name, port);
     clients++;
@@ -57,11 +57,12 @@ fun void recvReport()
             }
 
             <<<"Reporting:", client>>>;
-            setupClient(client);
+            setupClient(client, outPort);
         }
     }
 }
 
+// setupClient("localhost", 8080);
 spork ~ loop();
 spork ~ recvReport();
 while(true) { 1::second => now; }

@@ -199,13 +199,11 @@ fun void recvOrk() {
     OscRecv recv;
     6449 => recv.port;
     recv.listen();
-    recv.event("group", "i") @=> OscEvent oe;
+    recv.event("beat", "i") @=> OscEvent oe;
 
     while (true) {
         oe => now;
-        if (network == 0) {
-            1 => network;
-        }
+        1 => network;
 
         while (oe.nextMsg() != 0) {
             oe.getInt() => int rbeat;
