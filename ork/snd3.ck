@@ -70,6 +70,15 @@ Blit osc => LPF lpf => Envelope env => JCRev rev => dac;
  [0, 3, 7, 12],
  [0, 4, 7, 12],
  [0, 4, 7, 12],
+ [0, 3, 7, 12],
+ [0, 3, 7, 12]],
+
+ [[0, 4, 7, 12],
+ [0, 4, 7, 12],
+ [0, 4, 7, 12],
+ [0, 4, 7, 12],
+ [0, 4, 7, 12],
+ [0, 4, 7, 12],
  [0, 4, 7, 12],
  [0, 4, 7, 12]]
 
@@ -155,14 +164,12 @@ fun void getKeyboard() {
         while (kb.more()) {
             kb.getchar() => int c;
 
-            if (c == '1') if (ornament - 1 >= 0) 1 -=> ornament;
-            if (c == '2') if (ornament + 1 <= 3) 1 +=> ornament;
             if (c == 'q') if (density - 1 >= 0) 1 -=> density;
             if (c == 'w') if (density + 1 <= 4) 1 +=> density;
             if (c == 'z') if (volume - 0.05 >= 0) 0.05 -=> volume;
             if (c == 'x') 0.05 +=> volume;
             if (c == 'a') if (chordno - 1 >= 0) 1 -=> chordno;
-            if (c == 's') if (chordno + 1 <= chords.cap()) 1 +=> chordno;
+            if (c == 's') if (chordno + 1 < chords.cap()) 1 +=> chordno;
         }
     }
 }
@@ -225,16 +232,16 @@ fun void recvOrk() {
 <<<"", "">>>;
 <<<"", "">>>;
 <<<"", "">>>;
-<<<"", "">>>;
+
 fun void print() {
-    "\033[5D\033[6A" => string ctrl;
+    "\033[5D\033[5A" => string ctrl;
 
     if (network == 0) {
         <<<ctrl, " -   +  Network:  OFF", "">>>;
     } else {
         <<<ctrl, " -   +  Network:  ON", "">>>;
     }
-    <<<" [1] [2] Ornament:", ornament>>>;
+
     <<<" [Q] [W] Density: ", density>>>;
     <<<" [A] [S] ChordNo: ", chordno>>>;
     <<<" [Z] [X] Volume:  ", volume>>>;

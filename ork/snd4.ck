@@ -62,9 +62,17 @@ TriOsc osc => Envelope env => JCRev rev => dac;
  [0, 3, 7, 12],
  [0, 4, 7, 12],
  [0, 4, 7, 12],
+ [0, 3, 7, 12],
+ [0, 3, 7, 12]],
+
+[[0, 4, 7, 12],
+ [0, 4, 7, 12],
+ [0, 4, 7, 12],
+ [0, 4, 7, 12],
+ [0, 4, 7, 12],
+ [0, 4, 7, 12],
  [0, 4, 7, 12],
  [0, 4, 7, 12]]
-
 ] @=> int chords[][][];
 
 [
@@ -117,7 +125,7 @@ fun void getKeyboard() {
             if (c == 'z') if (volume - 0.05 >= 0) 0.05 -=> volume;
             if (c == 'x') 0.05 +=> volume;
             if (c == 'a') if (chordno - 1 >= 0) 1 -=> chordno;
-            if (c == 's') if (chordno + 1 <= chords.cap()) 1 +=> chordno;
+            if (c == 's') if (chordno + 1 < chords.cap()) 1 +=> chordno;
         }
     }
 }

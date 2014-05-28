@@ -86,6 +86,15 @@ for (int i; i < gains.cap(); ++i) {
  [0, 3, 7, 12],
  [0, 4, 7, 12],
  [0, 4, 7, 12],
+ [0, 3, 7, 12],
+ [0, 3, 7, 12]],
+
+ [[0, 4, 7, 12],
+ [0, 4, 7, 12],
+ [0, 4, 7, 12],
+ [0, 4, 7, 12],
+ [0, 4, 7, 12],
+ [0, 4, 7, 12],
  [0, 4, 7, 12],
  [0, 4, 7, 12]]
 
@@ -159,9 +168,18 @@ fun void getKeyboard() {
             if (c == 'z') if (volume - 0.05 >= 0) 0.05 -=> volume;
             if (c == 'x') 0.05 +=> volume;
             if (c == 'a') if (chordno - 1 >= 0) 1 -=> chordno;
-            if (c == 's') if (chordno + 1 <= chords.cap()) 1 +=> chordno;
-            if (c == 'e') if (density - 1 >= 0) 1 -=> density;
-            if (c == 'r') if (density + 1 <= 2) 1 +=> density;
+            if (c == 's') {
+                if (chordno + 1 < chords.cap()) {
+                    1 +=> chordno;
+                    //for ending
+                    if (chordno == chords.cap()-1 ||chordno == chords.cap()-2 ){
+                        4=>thickness;
+                        0=> density;
+                    }
+                }
+            }
+            if (c == '1') if (density - 1 >= 0) 1 -=> density;
+            if (c == '2') if (density + 1 <= 2) 1 +=> density;
         }
     }
 }
@@ -229,9 +247,8 @@ fun void print() {
     } else {
         <<<ctrl, " -   +  Network:   ON", "">>>;
     }
-
+    <<<" [1] [2] Density:  ", density>>>;
     <<<" [Q] [W] Thickness:", thickness>>>;
-    <<<" [E] [R] Density:  ", density>>>;
     <<<" [A] [S] ChordNo:  ", chordno>>>;
     <<<" [Z] [X] Volume:   ", volume>>>;
     <<<" [", currentBar ,"]">>>;
