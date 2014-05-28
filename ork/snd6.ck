@@ -253,15 +253,15 @@ fun void print() {
     "\033[5D\033[5A" => string ctrl;
 
     if (network == 0) {
-        <<<ctrl, " -   +     V1    V2    V3     Network:  OFF", "">>>;
+        <<<ctrl, " -   +     V1    V2    V3     Network:    OFF", "">>>;
     } else {
-        <<<ctrl, " -   +     V1    V2    V3     Network:  ON", "">>>;
+        <<<ctrl, " -   +     V1    V2    V3     Network:    ON", "">>>;
     }
     //<<<" [1] [2] Density:  ", density>>>;
     //<<<" [Q] [W] Thickness:", thickness>>>;
     <<<" [Q] [W]    1-4   1-4   ---    Thickness: ", thickness>>>;
-    <<<" [A] [S]    0-2   3-5   6-7    ChordNo: ", chordno>>>;
-    <<<" [Z] [X]                       Volume:  ", volume>>>;
+    <<<" [A] [S]    0-2   3-5   6-7    ChordNo:   ", chordno>>>;
+    <<<" [Z] [X]                       Volume:    ", volume>>>;
     <<<" [", currentBar ,"]">>>;
 }
 
