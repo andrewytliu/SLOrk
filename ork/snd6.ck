@@ -1,30 +1,3 @@
-// Courtesy of http://electro-music.com/forum/topic-19287.html&postorder=asc
-class Overdrive
-{
-   // this overdrive UGen applies f(x) = x^3 / (1 + abs(x^3)) waveshaping function
-   // to the "in"put signal and output to "out".
-
-   Gain in; Gain out; // chuck or unchuck this to the outside world to connect;
-
-   // prepare input ^ 3
-   in => Gain CubeOfInput;
-   in => Gain inDummy1 => CubeOfInput;
-   in => Gain inDummy2 => CubeOfInput;
-   3 => CubeOfInput.op;
-
-   // prepare abs(input ^ 3)
-   CubeOfInput => FullRect Abs;
-
-   // prepare 1 + abs(input ^ 3) .. to be used as the "divisor"
-   Step one => Gain divisor;
-   1.0 => one.next;
-   Abs => divisor;
-
-   // calculate input^3 / (1 + abs(input ^ 3)) and send to "out"
-   CubeOfInput => out;
-   divisor => out;
-   4 => out.op; // <-- make out do a division of the inputs
-}
 
 SawOsc osc1 => BPF bpf1 => Gain oscs;
 SawOsc osc2 => BPF bpf2 => oscs;
@@ -34,14 +7,8 @@ SawOsc osc4 => BPF bpf4 => oscs;
 [osc1,osc2,osc3,osc4] @=> SawOsc oscS[];
 [bpf1,bpf2,bpf3,bpf4] @=> BPF bpfS[];
 
-oscs => JCRev rev => Delay d => Envelope envs => dac;
+oscs => JCRev rev => Delay d => Envelope env => dac;
 d => Gain fbk => d;
-
-Overdrive od;
-TriOsc tris => od.in;
-od.out => Envelope envt => dac;
-
-0 => tris.gain;
 
 .2 => rev.gain;
 0.5 => oscs.gain;
@@ -58,6 +25,7 @@ for (int i; i < gains.cap(); ++i) {
 //.5::second => env.duration;
 
 [
+
 [[0, 3, 7,12],
 [-4, 0, 3, 8],
 [-7, -4, 0, 5],
@@ -123,231 +91,104 @@ for (int i; i < gains.cap(); ++i) {
 
 ] @=> int chords[][][];
 
-int currentBar;
+0 => int currentBar;
+0 => int currentBeat;
+
 0.0 => float volume;
 0 => int chordno;
 1 => int thickness ; // level: 1 - 4
 0 => int overdrive;
-0 => int density ;
-fun Envelope getEnv() {
-    if (overdrive == 0) {
-        return envs;
-    } else {
-        return envt;
+0 => int density;
+
+
+fun void mute() {
+    for (int i; i < gains.cap(); ++i) {
+        0.0 => oscS[i].freq;
+        0.0 => oscS[i].gain;
     }
 }
 
-fun void setTone() {
-    getEnv().keyOff();
-
-    if (overdrive == 0) {
-        for (int i; i < gains.cap(); ++i) {
-            0.0 => oscS[i].freq;
-            0.0 => oscS[i].gain;
-        }   
-
-        for ( 0=> int i ; i < thickness; i++){
-            chords[chordno][currentBar][i]  + 48 => int note;
-            note => Std.mtof => oscS[i].freq;
-            note => Std.mtof => bpfS[i].freq;
-            gains[i] * volume => oscS[i].gain;
-        }
-    } else {
-        chords[chordno][currentBar][0] + 48 => int note;
-        note => Std.mtof => tris.freq;
-    }
-
-
-    //chords[currentBar][0] + 48 => Std.mtof => osc1.freq;
-    //chords[currentBar][1] + 48 => Std.mtof => osc2.freq;
-    //chords[currentBar][2] + 48 => Std.mtof => osc3.freq;
-    //chords[currentBar][0] + 48 + 12 => Std.mtof => osc4.freq;
-
-    getEnv().keyOn();
-}
 fun void play() {
-    //Math.random2(0, chords[currentBar].cap() - 1) => int pick;
-    //chords[currentBar][pick] => int note;
-    setTone();//setTone(48 + note);
+    env.keyOff();
+    mute();
+
+    for (0=> int i; i < thickness; i++) {
+        chords[chordno][currentBar][i]  + 48 => int note;
+        note => Std.mtof => oscS[i].freq;
+        note => Std.mtof => bpfS[i].freq;
+        gains[i] * volume => oscS[i].gain;
+    }
+
+    env.keyOn();
+}
+
+fun void playSingle() {
+    env.keyOff();
+    mute();
+
+    int pick;
+    if (thickness < 4) {
+        thickness => pick;
+    } else {
+        0 => pick;
+    }
+
+    chords[chordno][currentBar][pick] + 48 + Math.random2(-1,1)*12 => int note;
+    note => Std.mtof => oscS[pick].freq;
+    note => Std.mtof => bpfS[pick].freq;
+    gains[0] * volume => oscS[pick].gain;
+
+    env.keyOn();
 }
 
 fun void stop() {
-    getEnv().keyOff();
+    env.keyOff();
 }
 
 fun void getKeyboard() {
-    Hid hi;
-    HidMsg msg;
-
-    0 => int device;
-    if (!hi.openKeyboard(device)) me.exit();
+    KBHit kb;
 
     while (true) {
-        hi => now;
+        kb => now;
 
-        while (hi.recv(msg)) {
-            /*
-            if (msg.ascii == 32) { // space
-                if (msg.isButtonDown()) {
-                    play();
-                } else {
-                    stop();
-                }
-            }
-            */
-            // thickness
-            if (msg.ascii ==81){ //Q
-                if (msg.isButtonDown()){
-                    if(thickness-1 >= 1)
-                        1 -=> thickness;
-                }
-            } else if (msg.ascii == 87){ //W
-                if (msg.isButtonDown()){
-                    if(thickness+1 <= 4 )
-                        1 +=> thickness;
-                }
-            } else if (msg.ascii == 90) { // Z
-                if (msg.isButtonDown()){
-                    if(volume - 0.05 >=0) {
-                        0.05 -=> volume;
-                    }
-                }
+        while (kb.more()) {
+            kb.getchar() => int c;
 
-            } else if (msg.ascii == 88)  {//X
-                if (msg.isButtonDown()){
-                    0.05 +=> volume;
-                }
-            } else if (msg.ascii == 65) { // A
-                if (msg.isButtonDown()){
-                    if( chordno - 1 >=0) {
-                        1 -=> chordno;
-                    }
-                }
-
-            } else if (msg.ascii == 83)  {//S
-                if (msg.isButtonDown()){
-                    if(chordno + 1 <=3) {
-                        1 +=> chordno;
-                    }
-                }
-            } else if (msg.ascii == 69) { // A
-                if (msg.isButtonDown()){
-                    if( density - 1 >=0) {
-                        1 -=> density;
-                    }
-                }
-
-            } else if (msg.ascii == 82)  {//S
-                if (msg.isButtonDown()){
-                    if(density + 1 <=2) {
-                        1 +=> density;
-                    }
-                }
-            } 
-            if (msg.ascii == '1' && msg.isButtonDown()) {
-                0 => overdrive;
-                1.0 => oscs.gain;
-                0.0 => tris.gain;
-            }
-            if (msg.ascii == '2' && msg.isButtonDown()) {
-                1 => overdrive;
-                0.0 => oscs.gain;
-                0.6 => tris.gain;
-            }
+            if (c == 'q') if (thickness - 1 >= 1) 1 -=> thickness;
+            if (c == 'w') if (thickness + 1 <= 4) 1 +=> thickness;
+            if (c == 'z') if (volume - 0.05 >= 0) 0.05 -=> volume;
+            if (c == 'x') 0.05 +=> volume;
+            if (c == 'a') if (chordno - 1 >= 0) 1 -=> chordno;
+            if (c == 's') if (chordno + 1 <= chords.cap()) 1 +=> chordno;
+            if (c == 'e') if (density - 1 >= 0) 1 -=> density;
+            if (c == 'r') if (density + 1 <= 2) 1 +=> density;
         }
     }
 }
- 
+
 [4,2,1] @=> int lasts[];
+
+fun void playBar() {
+    if (density == 0 && currentBeat % 8 == 0) {
+        play();
+    } else if (density == 1 && currentBeat % 8 == 0) {
+        play();
+    } else if (density == 1 && currentBeat % 8 == 4) {
+        playSingle();
+    } else if (density == 2 && currentBeat % 4 == 0) {
+        play();
+    } else if (density == 2 && currentBeat % 4 == 2) {
+        playSingle();
+    }
+}
+
 fun void runBar() {
     while (true) {
-        for (int i; i < 8; ++i) {
-            i => currentBar;
-            //2::second => now;
-            //stop();
-            for (int i; i < gains.cap(); ++i) {
-                0.0 => oscS[i].freq;
-                0.0 => oscS[i].gain;
-            }   
-            if (density == 0) {
-                for ( 0=> int i ; i < thickness; i++){
-                    chords[chordno][currentBar][i]  + 48 => int note;
-                    note => Std.mtof => oscS[i].freq;
-                    note => Std.mtof => bpfS[i].freq;
-                    gains[i] * volume => oscS[i].gain;
-                }
-                getEnv().keyOn();
-                2::second => now;
-                getEnv().keyOff();
-            }   
-            else if (density ==1) {
-                for ( 0=> int i ; i < thickness; i++){
-                    chords[chordno][currentBar][i]  + 48 => int note;
-                    note => Std.mtof => oscS[i].freq;
-                    note => Std.mtof => bpfS[i].freq;
-                    gains[i] * volume => oscS[i].gain;
-                }
-                getEnv().keyOn();
-                1::second => now;
-                getEnv().keyOff();
-                for (int i; i < gains.cap(); ++i) {
-                    0.0 => oscS[i].freq;
-                    0.0 => oscS[i].gain;
-                }
-                int pick;
-                if (thickness<4) {
-                    thickness => pick;
-                }
-                else {
-                    0 => pick;
-                }
-                chords[chordno][currentBar][pick]  + 48 + Math.random2(-1,1)*12=> int note;
-                note => Std.mtof => oscS[pick].freq;
-                note => Std.mtof => bpfS[pick].freq;
-                gains[0] * volume => oscS[pick].gain;
-                getEnv().keyOn();
-                1::second => now;
-                getEnv().keyOff();
-
-            }   
-            else if (density ==2) {
-                for (int j; j<2;j++){
-                    for ( 0=> int i ; i < thickness; i++){
-                        chords[chordno][currentBar][i]  + 48 => int note;
-                        note => Std.mtof => oscS[i].freq;
-                        note => Std.mtof => bpfS[i].freq;
-                        gains[i] * volume => oscS[i].gain;
-                    }
-                    getEnv().keyOn();
-                    .5::second => now;
-                    getEnv().keyOff();
-                    for (int i; i < gains.cap(); ++i) {
-                        0.0 => oscS[i].freq;
-                        0.0 => oscS[i].gain;
-                    }
-                    int pick;
-                    if (thickness<4) {
-                        thickness => pick;
-                    }
-                    else {
-                        0 => pick;
-                    }
-                    chords[chordno][currentBar][pick]  + 48 + Math.random2(-1,1)*12=> int note;
-                    note => Std.mtof => oscS[pick].freq;
-                    note => Std.mtof => bpfS[pick].freq;
-                    gains[0] * volume => oscS[pick].gain;
-                    getEnv().keyOn();
-                    .5::second => now;
-                    getEnv().keyOff();
-                    for (int i; i < gains.cap(); ++i) {
-                        0.0 => oscS[i].freq;
-                        0.0 => oscS[i].gain;
-                    }
-                }
-                    
-
-            }
-
+        for (int i; i < 64; ++i) {
+            i / 8 => currentBar;
+            i % 8 => currentBeat;
+            playBar();
+            250::ms => now;
         }
     }
 }
@@ -367,8 +208,10 @@ fun void recvOrk() {
         }
 
         while (oe.nextMsg() != 0) {
-            oe.getInt() => currentBar;
-            stop();
+            oe.getInt() => int rbeat;
+            rbeat / 8 => currentBar;
+            rbeat % 8 => currentBeat;
+            playBar();
         }
     }
 }
@@ -379,9 +222,9 @@ fun void recvOrk() {
 <<<"", "">>>;
 <<<"", "">>>;
 <<<"", "">>>;
-<<<"", "">>>;
+
 fun void print() {
-    "\033[5D\033[7A" => string ctrl;
+    "\033[5D\033[6A" => string ctrl;
 
     if (network == 0) {
         <<<ctrl, " -   +  Network:   OFF", "">>>;
@@ -389,14 +232,8 @@ fun void print() {
         <<<ctrl, " -   +  Network:   ON", "">>>;
     }
 
-    if (overdrive == 0) {
-        <<<" [1] [2] OD:        OFF", "">>>;
-    } else {
-        <<<" [1] [2] OD:        ON", "">>>;
-    }
-
     <<<" [Q] [W] Thickness:", thickness>>>;
-    <<<" [E] [R] Density:", density>>>;
+    <<<" [E] [R] Density:  ", density>>>;
     <<<" [A] [S] ChordNo:  ", chordno>>>;
     <<<" [Z] [X] Volume:   ", volume>>>;
     <<<" [", currentBar ,"]">>>;
