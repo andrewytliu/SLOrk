@@ -113,7 +113,7 @@ for (int i; i < choose.cap(); ++i) {
 fun void play(int i) {
     choose[i] => int pick;
 
-    vol / 15 => g.gain;
+    vol / 20 => g.gain;
     if (pick == 3) {
         Math.random2(0, chords[chordno][currentBar].cap() - 1) => int cpick;
         chords[chordno][currentBar][cpick] => int note;
@@ -177,8 +177,8 @@ fun void getKeyboard() {
             if (c == 'm') toggle(6, 3);
             if (c == ',') toggle(7, 3);
 
-            if (c == '.') 0.01 -=> vol;
-            if (c == '/') 0.01 +=> vol;
+            if (c == '.') 0.05 -=> vol;
+            if (c == '/') 0.05 +=> vol;
             if (c == 'l' && chordno - 1 >= 0) 1 -=> chordno;
             if (c == ';' && chordno + 1 <= 6) 1 +=> chordno;
         }
