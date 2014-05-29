@@ -85,6 +85,7 @@ TriOsc osc => Envelope env => JCRev rev => dac;
 0.0 => float volume;
 0 => int chordno;
 0 => int density;
+0 => int crash;
 
 fun void play(int pick) {
     env.keyOff();
@@ -103,7 +104,7 @@ fun void play(int pick) {
         scales[index][Math.random2(0,6)] + Math.random2(0,1)*12 + 72 => note;
     }
     note => Std.mtof => osc.freq;
-    volume*0.1 => osc.gain;
+    volume*0.05 => osc.gain;
     env.keyOn();
 }
 
@@ -197,7 +198,7 @@ fun void endDestruct() {
 
 fun void recvOrk() {
     OscRecv recv;
-    1234 => recv.port;
+    6449 => recv.port;
     recv.listen();
     recv.event("beat", "i") @=> OscEvent oe;
 
@@ -217,7 +218,7 @@ fun void recvOrk() {
                 if (rbeat == -2) {
                     stop();
                     2::second => now;
-                    0/0;
+                    1 => crash;;
                 }
             }
         }
@@ -278,4 +279,7 @@ if (me.args() > 0) {
 }
 spork ~ getKeyboard();
 spork ~ printLoop();
-while (true) { 1::second => now; }
+while (true) {
+    if (crash > 0) break;
+    second => now;
+}

@@ -108,6 +108,7 @@ for (int i; i < gains.cap(); ++i) {
 1 => int thickness ; // level: 1 - 4
 0 => int overdrive;
 0 => int density;
+0 => int crash;
 
 
 fun void mute() {
@@ -217,7 +218,7 @@ fun void runBar() {
 
 fun void recvOrk() {
     OscRecv recv;
-    5678 => recv.port;
+    6449 => recv.port;
     recv.listen();
     recv.event("beat", "i") @=> OscEvent oe;
 
@@ -236,7 +237,7 @@ fun void recvOrk() {
                 if (rbeat == -2) {
                     stop();
                     2::second => now;
-                    0/0;
+                    1 => crash;
                 }
             }
         }
@@ -299,4 +300,7 @@ if (me.args() > 0) {
 }
 spork ~ getKeyboard();
 spork ~ printLoop();
-while (true) { 1::second => now; }
+while (true) {
+    if (crash > 0) break;
+    second => now;
+}

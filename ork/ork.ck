@@ -87,10 +87,6 @@ fun void getKeyboard() {
     }
 }
 
-//setupClient("hfwu.local", 1234);
-//setupClient("hfwu.local", 5678);
-//setupClient("eggegg-air.local", 1234);
-//setupClient("eggegg-air.local", 5678);
 spork ~ loop();
 spork ~ recvReport();
 spork ~ getKeyboard();

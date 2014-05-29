@@ -3,6 +3,7 @@
 
 0 => int currentBeat;
 0 => int currentBar;
+0 => int crash;
 
 Gain g;
 SndBuf snd[3];
@@ -221,7 +222,7 @@ fun void recvOrk() {
                 play(currentBeat);
             } else if (rbeat == -2) {
                 2::second => now;
-                0/0;
+                1 => crash; 
             }
         }
     }
@@ -282,4 +283,7 @@ if (me.args() > 0) {
 }
 spork ~ getKeyboard();
 spork ~ printLoop();
-while (true) { 1::second => now; }
+while (true) {
+    if (crash > 0) break;
+    second => now;
+}
