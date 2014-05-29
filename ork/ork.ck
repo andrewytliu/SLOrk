@@ -83,6 +83,11 @@ fun void getKeyboard() {
                 sendGroup(-2);
                 <<<"END", "">>>;
             }
+
+            if (c >= '0' && c <= '9') {
+                sendGroup(-3 - (c - '0'));
+                <<<"Chord", c - '0', "">>>;
+            }
         }
     }
 }

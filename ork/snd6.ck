@@ -164,23 +164,11 @@ fun void getKeyboard() {
         while (kb.more()) {
             kb.getchar() => int c;
 
-            if (c == 'q') if (thickness - 1 >= 1) 1 -=> thickness;
-            if (c == 'w') if (thickness + 1 <= 4) 1 +=> thickness;
+            if (c == 'a') if (thickness - 1 >= 1) 1 -=> thickness;
+            if (c == 's') if (thickness + 1 <= 4) 1 +=> thickness;
             if (c == 'z') if (volume - 0.05 >= 0) 0.05 -=> volume;
             if (c == 'x') 0.05 +=> volume;
-            if (c == 'a') if (chordno - 1 >= 0) 1 -=> chordno;
-            if (c == 's') {
-                if (chordno + 1 < chords.cap()) {
-                    1 +=> chordno;
-                    //for ending
-                    if (chordno ==3 || chordno ==5  ||chordno ==6 )
-                        2 => density;
-                    if (chordno == chords.cap()-1 ||chordno == chords.cap()-2 ){
-                        4=>thickness;
-                        0=> density;
-                    }
-                }
-            }
+
             //if (c == '1') if (density - 1 >= 0) 1 -=> density;
             //if (c == '2') if (density + 1 <= 2) 1 +=> density;
         }
@@ -239,6 +227,15 @@ fun void recvOrk() {
                     2::second => now;
                     1 => crash;
                 }
+                if (rbeat < -2) {
+                    -3 - rbeat => chordno;
+                    if (chordno == 3 || chordno == 5  ||chordno == 6)
+                        2 => density;
+                    if (chordno == chords.cap()-1 || chordno == chords.cap()-2){
+                        4 => thickness;
+                        0 => density;
+                    }
+                }
             }
         }
     }
@@ -248,10 +245,9 @@ fun void recvOrk() {
 <<<"", "">>>;
 <<<"", "">>>;
 <<<"", "">>>;
-<<<"", "">>>;
 
 fun void print() {
-    "\033[5D\033[5A" => string ctrl;
+    "\033[5D\033[4A" => string ctrl;
 
     if (network == 0) {
         <<<ctrl, " -   +     V1    V2    V3     Network:    OFF", "">>>;
@@ -260,8 +256,7 @@ fun void print() {
     }
     //<<<" [1] [2] Density:  ", density>>>;
     //<<<" [Q] [W] Thickness:", thickness>>>;
-    <<<" [Q] [W]    1-4   1-4   ---    Thickness: ", thickness>>>;
-    <<<" [A] [S]    0-2   3-5   6-7    ChordNo:   ", chordno>>>;
+    <<<" [A] [S]    1-4   1-4   ---    Thickness: ", thickness>>>;
     <<<" [Z] [X]                       Volume:    ", volume>>>;
     <<<" [", currentBar ,"]">>>;
 }

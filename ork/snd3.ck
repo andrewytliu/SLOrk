@@ -165,12 +165,10 @@ fun void getKeyboard() {
         while (kb.more()) {
             kb.getchar() => int c;
 
-            if (c == 'q') if (density - 1 >= 0) 1 -=> density;
-            if (c == 'w') if (density + 1 <= 4) 1 +=> density;
+            if (c == 'a') if (density - 1 >= 0) 1 -=> density;
+            if (c == 's') if (density + 1 <= 4) 1 +=> density;
             if (c == 'z') if (volume - 0.05 >= 0) 0.05 -=> volume;
             if (c == 'x') 0.05 +=> volume;
-            if (c == 'a') if (chordno - 1 >= 0) 1 -=> chordno;
-            if (c == 's') if (chordno + 1 < chords.cap()) 1 +=> chordno;
         }
     }
 }
@@ -250,6 +248,9 @@ fun void recvOrk() {
                     2::second => now;
                     1 => crash;;
                 }
+                if (rbeat < -2) {
+                    -3 - rbeat => chordno;
+                }
             }
         }
     }
@@ -259,10 +260,9 @@ fun void recvOrk() {
 <<<"", "">>>;
 <<<"", "">>>;
 <<<"", "">>>;
-<<<"", "">>>;
 
 fun void print() {
-    "\033[5D\033[5A" => string ctrl;
+    "\033[5D\033[4A" => string ctrl;
 
     if (network == 0) {
         <<<ctrl, " -   +     V1    V2    V3     Network:  OFF", "">>>;
@@ -270,8 +270,7 @@ fun void print() {
         <<<ctrl, " -   +     V1    V2    V3     Network:  ON", "">>>;
     }
 
-    <<<" [Q] [W]    0-2   3-4   3-4    Density: ", density>>>;
-    <<<" [A] [S]    0-2   3-5   6-7    ChordNo: ", chordno>>>;
+    <<<" [A] [S]    0-2   3-4   3-4    Density: ", density>>>;
     <<<" [Z] [X]                       Volume:  ", volume>>>;
     <<<" [", currentBar ,"]">>>;
 }
@@ -310,7 +309,7 @@ if (me.args() > 0) {
 }
 spork ~ getKeyboard();
 spork ~ printLoop();
-while (true) { 
+while (true) {
     if (crash > 0) break;
     second => now;
 }

@@ -180,8 +180,6 @@ fun void getKeyboard() {
 
             if (c == '.') 0.05 -=> vol;
             if (c == '/') 0.05 +=> vol;
-            if (c == 'l' && chordno - 1 >= 0) 1 -=> chordno;
-            if (c == ';' && chordno + 1 <= 6) 1 +=> chordno;
         }
     }
 }
@@ -222,7 +220,9 @@ fun void recvOrk() {
                 play(currentBeat);
             } else if (rbeat == -2) {
                 2::second => now;
-                1 => crash; 
+                1 => crash;
+            } else if (rbeat < -2) {
+                -3 - rbeat => chordno;
             }
         }
     }
@@ -233,16 +233,14 @@ fun void recvOrk() {
 <<<"", "">>>;
 <<<"", "">>>;
 <<<"", "">>>;
-<<<"", "">>>;
 
 fun void print() {
-    "\033[5D\033[6A" => string ctrl;
+    "\033[5D\033[5A" => string ctrl;
     if (network == 0) {
         <<<ctrl, " -   +  Network: OFF", "">>>;
     } else {
         <<<ctrl, " -   +  Network: ON", "">>>;
     }
-    <<<" [L] [;] ChordNo:", chordno>>>;
     <<<" [.] [/] Volume: ", vol>>>;
     <<<" [", currentBar ,"] [", currentBeat, "], 0 => snare, 1 => hihat, 2 => kick, 3 => glockenspiel">>>;
     <<<"", "">>>;
