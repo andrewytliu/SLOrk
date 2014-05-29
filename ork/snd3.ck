@@ -167,7 +167,10 @@ fun void getKeyboard() {
 
             if (c == 'a') if (density - 1 >= 0) 1 -=> density;
             if (c == 's') if (density + 1 <= 4) 1 +=> density;
-            if (c == 'z') if (volume - 0.05 >= 0) 0.05 -=> volume;
+            if (c == 'z') {
+                0.05 -=> volume;
+                if (volume < 0) 0.0 => volume;
+            }
             if (c == 'x') 0.05 +=> volume;
         }
     }

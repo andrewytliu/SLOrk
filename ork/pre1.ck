@@ -187,7 +187,10 @@ fun void getKeyboard() {
             if (c == 'm') toggle(6, 3);
             if (c == ',') toggle(7, 3);
 
-            if (c == '.') 0.05 -=> vol;
+            if (c == '.') {
+                0.05 -=> vol;
+                if (vol < 0) 0.0 => vol;
+            }
             if (c == '/') 0.05 +=> vol;
         }
     }

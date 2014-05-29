@@ -166,7 +166,10 @@ fun void getKeyboard() {
 
             if (c == 'a') if (thickness - 1 >= 1) 1 -=> thickness;
             if (c == 's') if (thickness + 1 <= 4) 1 +=> thickness;
-            if (c == 'z') if (volume - 0.05 >= 0) 0.05 -=> volume;
+            if (c == 'z') {
+                0.05 -=> volume;
+                if (volume < 0) 0.0 => volume;
+            }
             if (c == 'x') 0.05 +=> volume;
 
             //if (c == '1') if (density - 1 >= 0) 1 -=> density;
@@ -229,7 +232,7 @@ fun void recvOrk() {
                 }
                 if (rbeat < -2) {
                     -3 - rbeat => chordno;
-                    if (chordno == 3 || chordno == 5  ||chordno == 6)
+                    if (chordno == 3 || chordno == 5 || chordno == 6)
                         2 => density;
                     if (chordno == chords.cap()-1 || chordno == chords.cap()-2){
                         4 => thickness;
