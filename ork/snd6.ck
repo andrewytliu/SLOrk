@@ -15,7 +15,7 @@ d => Gain fbk => d;
 15::ms => d.delay;
 0.75 => fbk.gain;
 
-[2.0, 1.0, 1.0, 1.0] @=> float gains[];
+[2.0, 1.5, 0.8, 0.8] @=> float gains[];
 for (int i; i < gains.cap(); ++i) {
     0.0 => oscS[i].freq;
     0.0 => oscS[i].gain;
@@ -124,6 +124,8 @@ fun void play() {
 
     for (0=> int i; i < thickness; i++) {
         chords[chordno][currentBar][i]  + 48 => int note;
+        if (thickness>2&&i>1) 12 +=> note;
+        if (thickness==4 && i ==0) 12 -=> note;
         note => Std.mtof => oscS[i].freq;
         note => Std.mtof => bpfS[i].freq;
         gains[i] * volume *0.5 => oscS[i].gain;
@@ -187,11 +189,13 @@ fun void playBar() {
         play();
     } else if (density == 1 && currentBeat % 8 == 4) {
         playSingle();
-    } else if (density == 2 && currentBeat % 4 == 0) {
+    } 
+    else if (density == 2 && currentBeat % 4 == 0) {
         play();
     } else if (density == 2 && currentBeat % 4 == 2) {
         playSingle();
     }
+
 }
 
 fun void runBar() {
@@ -232,7 +236,7 @@ fun void recvOrk() {
                 }
                 if (rbeat < -2) {
                     -3 - rbeat => chordno;
-                    if (chordno == 3 || chordno == 5 || chordno == 6)
+                    if (chordno == 3 || chordno == 4 || chordno == 5)
                         2 => density;
                     if (chordno == chords.cap()-1 || chordno == chords.cap()-2){
                         4 => thickness;
